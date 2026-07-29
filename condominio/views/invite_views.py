@@ -12,6 +12,7 @@ from flask import redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from condominio import app
+from condominio.auth_web import role_required_web
 from condominio.db_raw import get_conn as _get_conn
 
 
@@ -58,6 +59,7 @@ def _log_email(nome, email, link, tipo):
 # ══════════════════════════════════════════════════════════════
 
 @app.route("/salvar_funcionario", methods=["POST"])
+@role_required_web("sindico", "administrador")
 def salvar_funcionario():
     nome     = request.form.get("nome_funcionario",   "").strip()
     cargo    = request.form.get("Cargo_funcionario",  "").strip()
@@ -152,6 +154,7 @@ def salvar_funcionario():
 # ══════════════════════════════════════════════════════════════
 
 @app.route("/salvar_morador", methods=["POST"])
+@role_required_web("sindico", "administrador")
 def salvar_morador():
     nome      = request.form.get("nome_morador",        "").strip()
     email     = request.form.get("email_morador",       "").strip().lower()
@@ -345,6 +348,7 @@ def confirmar_email_post(token):
 # ══════════════════════════════════════════════════════════════
 
 @app.route("/reenviar_convite", methods=["POST"])
+@role_required_web("sindico", "administrador")
 def reenviar_convite():
     email  = request.form.get("email", "").strip().lower()
     tipo   = request.form.get("tipo", "funcionario").strip()
@@ -389,6 +393,7 @@ def reenviar_convite():
 # ══════════════════════════════════════════════════════════════
 
 @app.route("/api/funcionarios")
+@role_required_web("sindico", "administrador")
 def api_funcionarios():
     """
     Retorna todos os funcionários do banco em JSON.
@@ -429,6 +434,7 @@ def api_funcionarios():
 # ══════════════════════════════════════════════════════════════
 
 @app.route("/api/reenviar_convite_func/<int:func_id>", methods=["POST"])
+@role_required_web("sindico", "administrador")
 def api_reenviar_convite_func(func_id):
     """Gera novo convite para um funcionário e retorna o link."""
     from flask import jsonify

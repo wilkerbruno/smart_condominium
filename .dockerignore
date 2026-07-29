@@ -1,8 +1,9 @@
-# Segredos — NUNCA vão pra imagem Docker
-.env
-.env.*
-!.env.example
-
+# NOTA: .env NÃO está aqui de propósito. No EasyPanel, o modo "Create env
+# file" grava um .env de verdade no diretório do app ANTES do build da
+# imagem — se o Docker ignorasse esse arquivo, as variáveis nunca
+# chegariam no container. Ele já está fora do Git (.gitignore) e nunca é
+# commitado; a imagem fica só dentro do seu EasyPanel, não é publicada
+# em nenhum registro público.
 # Ambientes virtuais
 .venv/
 venv/

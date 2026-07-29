@@ -1,6 +1,7 @@
 from flask import redirect, render_template, request, session, url_for
 
 from condominio import app, db, path
+from condominio.auth_web import login_required, role_required_web
 from condominio.db_raw import get_conn as _get_conn
 
 def is_sindico():
@@ -10,42 +11,52 @@ def is_sindico():
 # ── Rotas gerais ───────────────────────────────────────────────
 
 @app.route("/")
+@login_required
 def index():
     return render_template("index.html", titulo="Smart condominium | Home")
 
 @app.route("/sobre")
+@login_required
 def sobre():
     return render_template("sobre.html", titulo="Sobre")
 
 @app.route("/recados")
+@login_required
 def recados():
     return render_template("recados.html", titulo="recados")
 
 @app.route("/cobranca")
+@login_required
 def cobranca():
     return render_template("cobranca.html", titulo="Cobranças")
 
 @app.route("/todas_cobrancas")
+@login_required
 def todas_cobrancas():
     return render_template("todas_cobrancas.html", titulo="Todas as Cobranças")
 
 @app.route("/fazer_reservas")
+@login_required
 def fazer_reservas():
     return render_template("fazer_reservas.html", titulo="Fazer Reservas")
 
 @app.route("/reservas")
+@login_required
 def reservas():
     return render_template("reservas.html", titulo="Reservas")
 
 @app.route("/resultados")
+@login_required
 def resultados():
     return render_template("resultados.html", titulo="Resultados")
 
 @app.route("/units")
+@login_required
 def units():
     return render_template("units.html", titulo="units")
 
 @app.route("/chat")
+@login_required
 def chat():
     return render_template("chat.html", titulo="chat")
 
@@ -54,24 +65,28 @@ def erro():
     return render_template("erro.html")
 
 
-# ── Cadastros ──────────────────────────────────────────────────
+# ── Cadastros (só síndico/administrador) ────────────────────────
 
 @app.route("/cadastro_funcionario")
+@role_required_web("sindico", "administrador")
 def cadastro_funcionario():
     return render_template("cadastro_funcionario.html", titulo="Cadastro de Funcionario")
 
 @app.route("/cadastro_morador")
+@role_required_web("sindico", "administrador")
 def cadastro_morador():
     return render_template("cadastro_morador.html", titulo="Cadastro de Morador")
 
 @app.route("/cadastro_unit")
+@role_required_web("sindico", "administrador")
 def cadastro_unit():
     return render_template("cadastro_unit.html", titulo="cadastro de Unidades")
 
 
-# ── Funcionários ───────────────────────────────────────────────
+# ── Funcionários (só síndico/administrador) ─────────────────────
 
 @app.route("/funcionarios")
+@role_required_web("sindico", "administrador")
 def funcionarios():
     return render_template("funcionarios.html", titulo="Funcionários")
 
@@ -79,6 +94,7 @@ def funcionarios():
 # ── Escalas ────────────────────────────────────────────────────
 
 @app.route("/escalas")
+@login_required
 def escalas():
     cargo    = session.get("cargo", "")
     can_edit = cargo in ("sindico", "administrador")
@@ -92,13 +108,15 @@ def escalas():
     )
 
 @app.route("/escalas/visualizacao")
+@login_required
 def escalas_visualizacao():
     return render_template("escalas_visualizacao.html")
 
 
-# ── API: verificar usuário disponível ──────────────────────────
+# ── API: verificar usuário disponível (só quem cadastra gente nova) ──
 
 @app.route("/api/check_usuario")
+@role_required_web("sindico", "administrador")
 def api_check_usuario():
     from flask import jsonify
     usuario = request.args.get("usuario", "").strip().lower()
