@@ -1,0 +1,287 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/veiculos.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-header-left">
+    <h2>Veículos</h2>
+    <p>Gerencie os veículos cadastrados no condomínio</p>
+  </div>
+  <a href="{{ url_for('cadastro_veiculo') }}" class="btn-primary">
+    <i class="fa-solid fa-plus"></i> Cadastrar Veículo
+  </a>
+</div>
+
+<!-- ── Stats ───────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-icon si-blue"><i class="fa-solid fa-car"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="totalVeic">23</span>
+      <span class="stat-label">Total</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-green"><i class="fa-solid fa-car-side"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="countCarro">–</span>
+      <span class="stat-label">Carros</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-amber"><i class="fa-solid fa-motorcycle"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="countMoto">–</span>
+      <span class="stat-label">Motos</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-red"><i class="fa-solid fa-truck"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="countOutro">–</span>
+      <span class="stat-label">Outros</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Table card ──────────────────────────────────────────── -->
+<div class="table-card" id="mainCard">
+
+  <div class="table-card-toolbar">
+    <div class="table-search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" id="tableSearch" class="table-search"
+             placeholder="Buscar placa, modelo, dono…" oninput="filterTable(this.value)">
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div class="table-filters">
+        <button class="filter-btn active" onclick="filterTipo('todos', this)">Todos</button>
+        <button class="filter-btn" onclick="filterTipo('carro', this)">Carros</button>
+        <button class="filter-btn" onclick="filterTipo('moto', this)">Motos</button>
+        <button class="filter-btn" onclick="filterTipo('caminhao', this)">Caminhões</button>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btnGrid" title="Grade" onclick="setView('grid')">
+          <i class="fa-solid fa-grip"></i>
+        </button>
+        <button class="view-btn" id="btnList" title="Lista" onclick="setView('list')">
+          <i class="fa-solid fa-list"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODO GRADE -->
+  <div class="vehicle-grid" id="vehicleGrid"></div>
+
+  <!-- MODO LISTA (oculto por padrão) -->
+  <div id="vehicleList" style="display:none;overflow-x:auto">
+    <table class="veic-table">
+      <thead>
+        <tr>
+          <th>Modelo / Marca</th>
+          <th>Tipo</th>
+          <th>Placa</th>
+          <th>Cor</th>
+          <th>Dono</th>
+          <th>Unidade</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="vehicleTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="table-pagination">
+    <span class="pagination-info" id="paginationInfo"></span>
+    <div class="pagination-btns" id="paginationBtns"></div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Dados (morador.veiculo_* + unidade_id do banco) ────── */
+  var veiculos = [
+    { id:1,  unidade:1,  dono:'Ana Oliveira',       modelo:'Toyota Corolla',    placa:'ABC-1234', cor:'Prata',    tipo:'carro'    },
+    { id:2,  unidade:1,  dono:'Pedro Oliveira',      modelo:'Honda Civic',       placa:'XYZ-9876', cor:'Preto',    tipo:'carro'    },
+    { id:3,  unidade:2,  dono:'Lucas Santos',        modelo:'Volkswagen Golf',   placa:'DEF-5678', cor:'Azul',     tipo:'carro'    },
+    { id:4,  unidade:3,  dono:'Marina Costa',        modelo:'Ford Fiesta',       placa:'GHI-3456', cor:'Vermelho', tipo:'carro'    },
+    { id:5,  unidade:3,  dono:'Fernanda Silva',      modelo:'Chevrolet Onix',    placa:'JKL-9012', cor:'Branco',   tipo:'carro'    },
+    { id:6,  unidade:6,  dono:'Gustavo Oliveira',    modelo:'Fiat Uno',          placa:'MNO-2345', cor:'Vermelho', tipo:'carro'    },
+    { id:7,  unidade:6,  dono:'Amanda Santos',       modelo:'Renault Sandero',   placa:'PQR-6789', cor:'Prata',    tipo:'carro'    },
+    { id:8,  unidade:7,  dono:'Juliana Costa',       modelo:'Chevrolet Prisma',  placa:'STU-7890', cor:'Preto',    tipo:'carro'    },
+    { id:9,  unidade:8,  dono:'Rafael Silva',        modelo:'Hyundai HB20',      placa:'VWX-1234', cor:'Azul',     tipo:'carro'    },
+    { id:10, unidade:8,  dono:'Camila Oliveira',     modelo:'Volkswagen Polo',   placa:'YZA-5678', cor:'Branco',   tipo:'carro'    },
+    { id:11, unidade:9,  dono:'Fábio Santos',        modelo:'Toyota Etios',      placa:'BCD-3456', cor:'Prata',    tipo:'carro'    },
+    { id:12, unidade:9,  dono:'Laura Costa',         modelo:'Fiat Palio',        placa:'EFG-6789', cor:'Vermelho', tipo:'carro'    },
+    { id:13, unidade:10, dono:'Gabriel Silva',       modelo:'Renault Duster',    placa:'HIJ-7890', cor:'Preto',    tipo:'carro'    },
+    { id:14, unidade:11, dono:'Carolina Oliveira',   modelo:'Honda Fit',         placa:'KLM-1234', cor:'Azul',     tipo:'carro'    },
+    { id:15, unidade:11, dono:'Matheus Santos',      modelo:'Chevrolet Spin',    placa:'NOP-5678', cor:'Branco',   tipo:'carro'    },
+    { id:16, unidade:12, dono:'Vanessa Costa',       modelo:'Fiat Toro',         placa:'PQR-3456', cor:'Prata',    tipo:'carro'    },
+    { id:17, unidade:12, dono:'Bruno Silva',         modelo:'Volkswagen Voyage', placa:'STU-6789', cor:'Vermelho', tipo:'carro'    },
+    { id:18, unidade:13, dono:'Fernando Oliveira',   modelo:'Chevrolet Tracker', placa:'VWX-7890', cor:'Preto',    tipo:'carro'    },
+    { id:19, unidade:14, dono:'Aline Santos',        modelo:'Ford Ecosport',     placa:'YZA-1234', cor:'Azul',     tipo:'carro'    },
+    { id:20, unidade:14, dono:'Daniel Costa',        modelo:'Toyota Hilux',      placa:'BCD-5678', cor:'Branco',   tipo:'caminhao' },
+    { id:21, unidade:15, dono:'Isabela Oliveira',    modelo:'Renault Kwid',      placa:'EFG-3456', cor:'Prata',    tipo:'carro'    },
+    { id:22, unidade:15, dono:'Gustavo Santos',      modelo:'Fiat Siena',        placa:'HIJ-6789', cor:'Vermelho', tipo:'carro'    },
+    { id:23, unidade:16, dono:'Julia Silva',         modelo:'Chevrolet',         placa:'KLM-7890', cor:'Vermelho', tipo:'carro'    },
+  ];
+
+  var COR_MAP = {
+    'Prata': '#94a3b8', 'Preto': '#1e293b', 'Azul': '#3b82f6',
+    'Vermelho': '#ef4444', 'Branco': '#f8fafc', 'Verde': '#10b981',
+    'Amarelo': '#f59e0b', 'Cinza': '#6b7280', 'Marrom': '#92400e',
+  };
+
+  var PER_PAGE = 8, currentPage = 1, activeFilter = 'todos', searchQuery = '';
+  var viewMode = 'grid';
+
+  function tipoIcon(t) {
+    var m = {carro:'fa-car', moto:'fa-motorcycle', caminhao:'fa-truck', triciculo:'fa-bicycle'};
+    return m[t] || 'fa-car';
+  }
+  function tipoClass(t) {
+    var m = {carro:'vi-carro', moto:'vi-moto', caminhao:'vi-caminhao'};
+    return m[t] || 'vi-outro';
+  }
+  function tipoBadgeClass(t) {
+    var m = {carro:'tb-carro', moto:'tb-moto', caminhao:'tb-caminhao'};
+    return m[t] || 'tb-outro';
+  }
+  function tipoLabel(t) {
+    var m = {carro:'Carro', moto:'Moto', caminhao:'Caminhão', triciculo:'Triciclo'};
+    return m[t] || t;
+  }
+
+  function getFiltered() {
+    return veiculos.filter(function (v) {
+      var okT = activeFilter === 'todos' || v.tipo === activeFilter;
+      var q   = searchQuery.toLowerCase();
+      var okQ = !q ||
+        v.placa.toLowerCase().includes(q)  ||
+        v.modelo.toLowerCase().includes(q) ||
+        v.dono.toLowerCase().includes(q)   ||
+        v.cor.toLowerCase().includes(q);
+      return okT && okQ;
+    });
+  }
+
+  function render() {
+    var filtered = getFiltered();
+    var total    = filtered.length;
+    var pages    = Math.max(1, Math.ceil(total / PER_PAGE));
+    currentPage  = Math.min(currentPage, pages);
+    var start    = (currentPage - 1) * PER_PAGE;
+    var paged    = filtered.slice(start, start + PER_PAGE);
+
+    /* Stats */
+    document.getElementById('countCarro').textContent = veiculos.filter(function(v){return v.tipo==='carro';}).length;
+    document.getElementById('countMoto').textContent  = veiculos.filter(function(v){return v.tipo==='moto';}).length;
+    document.getElementById('countOutro').textContent = veiculos.filter(function(v){return v.tipo!=='carro'&&v.tipo!=='moto';}).length;
+
+    var emptyMsg = '<div style="padding:40px;text-align:center;color:var(--text-muted)">' +
+      '<i class="fa-solid fa-car-side" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>' +
+      'Nenhum veículo encontrado</div>';
+
+    if (viewMode === 'grid') {
+      var grid = document.getElementById('vehicleGrid');
+      if (paged.length === 0) { grid.innerHTML = emptyMsg; }
+      else {
+        grid.innerHTML = paged.map(function (v) {
+          var corHex = COR_MAP[v.cor] || '#94a3b8';
+          var borderCor = v.cor === 'Branco' ? '#e2e8f0' : corHex;
+          return '<div class="vehicle-card">' +
+            '<div class="vehicle-card-top">' +
+              '<div class="vehicle-icon ' + tipoClass(v.tipo) + '"><i class="fa-solid ' + tipoIcon(v.tipo) + '"></i></div>' +
+              '<div class="vehicle-info">' +
+                '<div class="vehicle-modelo">' + v.modelo + '</div>' +
+                '<div class="vehicle-dono"><i class="fa-solid fa-user" style="font-size:.65rem"></i>' + v.dono + '</div>' +
+              '</div>' +
+              '<div class="placa-tag"><i class="fa-solid fa-hashtag"></i>' + v.placa + '</div>' +
+            '</div>' +
+            '<div class="vehicle-card-details">' +
+              '<div class="vd-item">' +
+                '<div class="vd-label">Tipo</div>' +
+                '<div class="vd-value"><i class="fa-solid ' + tipoIcon(v.tipo) + '" style="font-size:.75rem;color:var(--brand)"></i>' + tipoLabel(v.tipo) + '</div>' +
+              '</div>' +
+              '<div class="vd-item">' +
+                '<div class="vd-label">Cor</div>' +
+                '<div class="vd-value"><span class="cor-dot" style="background:' + corHex + ';border-color:' + borderCor + '"></span>' + v.cor + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="vehicle-card-footer">' +
+              '<button class="vcard-btn"><i class="fa-solid fa-eye"></i> Detalhes</button>' +
+              '<button class="vcard-btn"><i class="fa-solid fa-pen-to-square"></i> Editar</button>' +
+              '<button class="vcard-btn btn-del"><i class="fa-solid fa-trash"></i> Excluir</button>' +
+            '</div></div>';
+        }).join('');
+      }
+    } else {
+      var tbody = document.getElementById('vehicleTableBody');
+      if (paged.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">' + emptyMsg + '</td></tr>'; }
+      else {
+        tbody.innerHTML = paged.map(function (v) {
+          var corHex = COR_MAP[v.cor] || '#94a3b8';
+          var borderCor = v.cor === 'Branco' ? '#e2e8f0' : corHex;
+          return '<tr>' +
+            '<td style="font-weight:600">' + v.modelo + '</td>' +
+            '<td><span class="tipo-badge ' + tipoBadgeClass(v.tipo) + '"><i class="fa-solid ' + tipoIcon(v.tipo) + '"></i>' + tipoLabel(v.tipo) + '</span></td>' +
+            '<td><div class="placa-tag" style="font-size:.75rem">' + v.placa + '</div></td>' +
+            '<td><div style="display:flex;align-items:center;gap:6px"><span class="cor-dot" style="background:' + corHex + ';border-color:' + borderCor + ';width:14px;height:14px"></span>' + v.cor + '</div></td>' +
+            '<td style="font-size:.82rem">' + v.dono + '</td>' +
+            '<td style="font-family:var(--font-mono);font-size:.78rem;color:var(--brand)">U-' + v.unidade + '</td>' +
+            '<td><div class="row-actions">' +
+              '<button class="action-btn" title="Detalhes"><i class="fa-solid fa-eye"></i></button>' +
+              '<button class="action-btn" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>' +
+              '<button class="action-btn btn-del" title="Excluir"><i class="fa-solid fa-trash"></i></button>' +
+            '</div></td></tr>';
+        }).join('');
+      }
+    }
+
+    /* Pagination */
+    document.getElementById('paginationInfo').innerHTML =
+      'Mostrando <strong>' + (total===0?0:start+1) + '–' + Math.min(start+PER_PAGE,total) + '</strong> de <strong>' + total + '</strong>';
+
+    var btns = '';
+    btns += '<button class="pg-btn" onclick="goPage(' + (currentPage-1) + ')" ' + (currentPage===1?'disabled':'') + '><i class="fa-solid fa-chevron-left"></i></button>';
+    for (var p = 1; p <= pages; p++) btns += '<button class="pg-btn' + (p===currentPage?' active':'') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+    btns += '<button class="pg-btn" onclick="goPage(' + (currentPage+1) + ')" ' + (currentPage===pages?'disabled':'') + '><i class="fa-solid fa-chevron-right"></i></button>';
+    document.getElementById('paginationBtns').innerHTML = btns;
+  }
+
+  window.setView = function (mode) {
+    viewMode = mode;
+    document.getElementById('vehicleGrid').style.display = mode === 'grid' ? '' : 'none';
+    document.getElementById('vehicleList').style.display = mode === 'list' ? '' : 'none';
+    document.getElementById('btnGrid').classList.toggle('active', mode === 'grid');
+    document.getElementById('btnList').classList.toggle('active', mode === 'list');
+    render();
+  };
+
+  window.goPage = function (p) {
+    var pages = Math.max(1, Math.ceil(getFiltered().length / PER_PAGE));
+    if (p < 1 || p > pages) return;
+    currentPage = p; render();
+  };
+  window.filterTable = function (q) { searchQuery = q; currentPage = 1; render(); };
+  window.filterTipo  = function (t, btn) {
+    activeFilter = t; currentPage = 1;
+    document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    render();
+  };
+
+  render();
+})();
+</script>
+
+{% endblock %}

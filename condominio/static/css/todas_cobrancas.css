@@ -1,0 +1,95 @@
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+			margin-top:20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+		 table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
+            background-color: #333;
+            color: white;
+        }
+		
+		 
+        /* Add the following CSS code to style the search input and position it relative to the table */
+        input[type=search] {
+            width: 300px;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: white;
+            background-image: url('search-icon.png');
+            background-position: 10px 10px;
+            background-repeat: no-repeat;
+            padding: 12px 20px 12px 40px;
+            -webkit-transition: width 0.4s ease-in-out;
+            transition: width 0.4s ease-in-out;
+			margin-top:160px;
+        }
+
+        input[type=search]::placeholder {
+            color: #ccc;
+        }
+
+        table {
+            margin-top: 50px;
+            margin-bottom: 50px;
+        }
+        h2 a img{
+
+            max-width: 17px;
+        }
+
+        .cadastrar_condominio{
+
+            text-decoration: none;
+            margin-left: 75%;
+            margin-top: 500px;
+            font-size: 20px;
+            position: fixed;
+            
+        }
+
+        .cadastrar_condominios{
+
+            text-decoration: none;
+            margin-left: 75%;
+            margin-top: 11%;
+            font-size: 20px;
+            position: relative;
+            
+        }

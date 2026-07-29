@@ -1,0 +1,52 @@
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Ambientes virtuais ────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# ── Flask / SQLAlchemy ────────────────────────────────────────
+instance/
+*.db
+*.sqlite3
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── IDEs ─────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# ── Migrações locais (não subir para produção) ────────────────
+# migrations/versions/*.py   ← descomente se quiser ignorar
+
+# ── Backups de template gerados pelos scripts de patch ────────
+condominio/templates/*.bak_*
+
+# ── Scripts de migration (não precisam ir para produção) ──────
+migration_usuario.py
+migrate_convite_escala.py
+migration_convite.sql
+patch_template_dropdown.py
+fix_dropdown_config.py
+fix_add_perfil.py
+inject_perfil_link.py
+fix_add_perfil.py
+dropdown_patch_manual.txt
+# Segredos — nunca commitar
+.env

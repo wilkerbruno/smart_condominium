@@ -1,0 +1,405 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/funcionarios.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-header-left">
+    <h2>Funcionários</h2>
+    <p>Gerencie a equipe do condomínio</p>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+    <a href="{{ url_for('escalas') }}" class="btn-secondary">
+      <i class="fa-solid fa-calendar-week"></i> Escalas
+    </a>
+    <a href="{{ url_for('cadastro_funcionario') }}" class="btn-primary">
+      <i class="fa-solid fa-plus"></i> Cadastrar Funcionário
+    </a>
+  </div>
+</div>
+
+<!-- ── Stats ───────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-icon si-blue"><i class="fa-solid fa-id-badge"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="totalFunc">–</span>
+      <span class="stat-label">Total</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-purple"><i class="fa-solid fa-user-tie"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="countSindico">–</span>
+      <span class="stat-label">Síndicos</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-green"><i class="fa-solid fa-brazilian-real-sign"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="totalFolha">–</span>
+      <span class="stat-label">Folha Total</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-amber"><i class="fa-solid fa-chart-simple"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="mediaSalario">–</span>
+      <span class="stat-label">Salário Médio</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Table card ──────────────────────────────────────────── -->
+<div class="table-card">
+
+  <div class="table-card-toolbar">
+    <div class="table-search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" id="tableSearch" class="table-search"
+             placeholder="Buscar nome, cargo…" oninput="filterTable(this.value)">
+    </div>
+    <div class="table-filters">
+      <button class="filter-btn active" onclick="filterCargo('todos',     this)">Todos</button>
+      <button class="filter-btn"        onclick="filterCargo('sindico',   this)">Síndico</button>
+      <button class="filter-btn"        onclick="filterCargo('porteiro',  this)">Porteiro</button>
+      <button class="filter-btn"        onclick="filterCargo('zelador',   this)">Zelador</button>
+      <button class="filter-btn"        onclick="filterCargo('seguranca', this)">Segurança</button>
+      <button class="filter-btn"        onclick="filterCargo('limpeza',   this)">Limpeza</button>
+    </div>
+  </div>
+
+  <!-- Carregando -->
+  <div id="loadingState" style="text-align:center;padding:50px;color:var(--text-muted)">
+    <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:10px;display:block"></i>
+    Carregando funcionários...
+  </div>
+
+  <!-- Erro -->
+  <div id="errorState" style="display:none;text-align:center;padding:50px">
+    <i class="fa-solid fa-triangle-exclamation" style="font-size:1.5rem;margin-bottom:10px;display:block;color:#dc2626"></i>
+    <strong style="color:#dc2626">Erro ao carregar funcionários.</strong><br>
+    <small id="errorMsg" style="color:var(--text-muted)"></small><br>
+    <button onclick="carregarFuncionarios()" style="
+      margin-top:12px;padding:8px 18px;background:var(--brand);color:#fff;
+      border:none;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600">
+      <i class="fa-solid fa-rotate-right"></i> Tentar novamente
+    </button>
+  </div>
+
+  <!-- Tabela -->
+  <div id="tableWrap" style="display:none;overflow-x:auto">
+    <table class="func-table">
+      <thead>
+        <tr>
+          <th>Funcionário</th>
+          <th>Cargo</th>
+          <th>Horário</th>
+          <th>Telefone</th>
+          <th>Salário</th>
+          <th>Conta</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="funcBody"></tbody>
+    </table>
+  </div>
+
+  <div class="table-pagination" id="paginationWrap" style="display:none">
+    <span class="pagination-info" id="paginationInfo"></span>
+    <div class="pagination-btns" id="paginationBtns"></div>
+  </div>
+
+</div>
+
+<!-- ── Modal convite de acesso ──────────────────────────────── -->
+<div id="conviteModal" style="
+  display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:200;
+  align-items:center;justify-content:center;backdrop-filter:blur(4px)
+">
+  <div style="
+    background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);
+    box-shadow:0 20px 40px rgba(0,0,0,.18);width:100%;max-width:500px;padding:28px;
+    animation:modalIn .2s cubic-bezier(.34,1.56,.64,1)
+  ">
+    <p style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:4px">
+      <i class="fa-solid fa-paper-plane" style="color:var(--brand)"></i>&nbsp;Convite de Acesso
+    </p>
+    <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:18px" id="conviteNomeModal"></p>
+    <hr style="border:none;border-top:1px solid var(--border);margin:0 0 18px">
+
+    <div id="conviteLoading" style="text-align:center;padding:20px">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size:1.3rem;color:var(--brand)"></i>
+      <p style="font-size:.83rem;color:var(--text-muted);margin-top:8px">Gerando link de convite...</p>
+    </div>
+
+    <div id="conviteResult" style="display:none">
+      <p style="font-size:.82rem;color:var(--text-secondary);margin-bottom:12px">
+        Envie este link para o funcionário criar sua senha de acesso:
+      </p>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+        <input type="text" id="conviteLinkInput" readonly onclick="this.select()" style="
+          flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);
+          font-size:.73rem;font-family:monospace;background:var(--page-bg);color:var(--text-primary);
+          outline:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+        ">
+        <button id="btnCopiar" onclick="copiarConviteLink()" style="
+          padding:9px 14px;background:#f59e0b;color:#fff;border:none;
+          border-radius:var(--radius-sm);font-size:.8rem;font-weight:600;
+          cursor:pointer;white-space:nowrap;flex-shrink:0
+        ">
+          <i class="fa-regular fa-copy"></i> Copiar
+        </button>
+      </div>
+      <p style="font-size:.72rem;color:var(--text-muted)">
+        <i class="fa-solid fa-clock" style="color:#f59e0b"></i>
+        Link válido por <strong>7 dias</strong>.
+      </p>
+    </div>
+
+    <div id="conviteErro" style="display:none">
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;color:#991b1b;font-size:.84rem">
+        <i class="fa-solid fa-circle-xmark"></i>&nbsp;<span id="conviteErroMsg"></span>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:20px">
+      <button onclick="fecharConviteModal()" style="
+        padding:9px 20px;background:var(--card-bg);color:var(--text-secondary);
+        border:1px solid var(--border);border-radius:var(--radius-sm);
+        font-size:.85rem;font-weight:600;cursor:pointer
+      ">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i class="fa-solid fa-circle-check"></i>
+  <span id="toastMsg"></span>
+</div>
+
+<style>
+@keyframes modalIn {
+  from { opacity:0; transform:scale(.92) translateY(12px); }
+  to   { opacity:1; transform:scale(1)   translateY(0); }
+}
+.btn-secondary {
+  display:inline-flex;align-items:center;gap:8px;background:var(--card-bg);
+  color:var(--text-secondary);border:1px solid var(--border);padding:10px 20px;
+  border-radius:var(--radius-sm);font-size:.85rem;font-family:var(--font-body);
+  font-weight:600;cursor:pointer;text-decoration:none;transition:var(--transition);white-space:nowrap;
+}
+.btn-secondary:hover { background:var(--page-bg);color:var(--brand);border-color:var(--brand); }
+.conta-badge {
+  display:inline-flex;align-items:center;gap:4px;padding:3px 9px;
+  border-radius:var(--radius-full);font-size:.68rem;font-weight:700;white-space:nowrap;
+}
+.conta-ativo   { background:#d1fae5;color:#065f46; }
+.conta-pendente{ background:#fef3c7;color:#92400e; }
+</style>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Estado ─────────────────────────────────────────────── */
+  var funcionarios = [];
+  var PER_PAGE     = 8;
+  var currentPage  = 1;
+  var activeFilter = 'todos';
+  var searchQuery  = '';
+  var COLORS = ['#2563eb','#7c3aed','#059669','#dc2626','#d97706','#0891b2','#be185d','#854d0e'];
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+  function initials(n) {
+    return (n||'?').split(' ').slice(0,2).map(function(p){return p[0];}).join('').toUpperCase();
+  }
+  function fmtSalary(v) {
+    return 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
+  }
+  function badgeInfo(cargo) {
+    var map = {
+      sindico:       {cls:'badge-sindico',   icon:'fa-user-tie',          label:'Síndico'      },
+      porteiro:      {cls:'badge-porteiro',  icon:'fa-door-open',         label:'Porteiro'     },
+      zelador:       {cls:'badge-zelador',   icon:'fa-broom',             label:'Zelador'      },
+      seguranca:     {cls:'badge-seguranca', icon:'fa-shield-halved',     label:'Segurança'    },
+      limpeza:       {cls:'badge-limpeza',   icon:'fa-spray-can-sparkles',label:'Limpeza'      },
+      administrador: {cls:'badge-outro',     icon:'fa-user-gear',         label:'Administrador'},
+    };
+    return map[(cargo||'').toLowerCase()] || {cls:'badge-outro',icon:'fa-circle-user',label:cargo||'—'};
+  }
+
+  /* ── Busca dados reais do banco ──────────────────────────── */
+  function carregarFuncionarios() {
+    document.getElementById('loadingState').style.display   = 'block';
+    document.getElementById('errorState').style.display     = 'none';
+    document.getElementById('tableWrap').style.display      = 'none';
+    document.getElementById('paginationWrap').style.display = 'none';
+
+    fetch('/api/funcionarios')
+      .then(function(res) {
+        if (!res.ok) throw new Error('Erro HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data) {
+        funcionarios = data;
+        document.getElementById('loadingState').style.display   = 'none';
+        document.getElementById('tableWrap').style.display      = 'block';
+        document.getElementById('paginationWrap').style.display = 'flex';
+        atualizarStats();
+        render();
+      })
+      .catch(function(err) {
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('errorState').style.display   = 'block';
+        document.getElementById('errorMsg').textContent = err.message;
+      });
+  }
+  window.carregarFuncionarios = carregarFuncionarios;
+
+  /* ── Stats ───────────────────────────────────────────────── */
+  function atualizarStats() {
+    var total    = funcionarios.length;
+    var sindicos = funcionarios.filter(function(f){ return (f.cargo||'').toLowerCase()==='sindico'; }).length;
+    var folha    = funcionarios.reduce(function(s,f){ return s+(f.salario||0); }, 0);
+    var media    = total > 0 ? folha/total : 0;
+    document.getElementById('totalFunc').textContent    = total;
+    document.getElementById('countSindico').textContent = sindicos;
+    document.getElementById('totalFolha').textContent   = fmtSalary(folha);
+    document.getElementById('mediaSalario').textContent = fmtSalary(media);
+  }
+
+  /* ── Filtros ─────────────────────────────────────────────── */
+  function getFiltered() {
+    return funcionarios.filter(function(f) {
+      var okC = activeFilter==='todos' || (f.cargo||'').toLowerCase()===activeFilter;
+      var q   = searchQuery.toLowerCase();
+      var okQ = !q ||
+        (f.nome||'').toLowerCase().indexOf(q)  !== -1 ||
+        (f.cargo||'').toLowerCase().indexOf(q) !== -1 ||
+        (f.email||'').toLowerCase().indexOf(q) !== -1;
+      return okC && okQ;
+    });
+  }
+
+  /* ── Render tabela ───────────────────────────────────────── */
+  function render() {
+    var filtered = getFiltered();
+    var total    = filtered.length;
+    var pages    = Math.max(1, Math.ceil(total/PER_PAGE));
+    currentPage  = Math.min(currentPage, pages);
+    var start    = (currentPage-1)*PER_PAGE;
+    var paged    = filtered.slice(start, start+PER_PAGE);
+
+    document.getElementById('funcBody').innerHTML = paged.length === 0
+      ? '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">'
+        + '<i class="fa-solid fa-user-slash" style="font-size:1.5rem;display:block;margin-bottom:8px;opacity:.4"></i>'
+        + 'Nenhum funcionário encontrado</td></tr>'
+      : paged.map(function(f, i) {
+          var bi  = badgeInfo(f.cargo);
+          var cor = COLORS[(start+i) % COLORS.length];
+          var contaBadge = f.ativo
+            ? '<span class="conta-badge conta-ativo"><i class="fa-solid fa-circle-check"></i> Ativo</span>'
+            : '<span class="conta-badge conta-pendente"><i class="fa-solid fa-clock"></i> Pendente</span>';
+          var btnConvite = !f.ativo
+            ? '<button class="action-btn" title="Gerar convite de acesso" '
+              + 'onclick="abrirConviteModal('+f.id+',\''+((f.nome||'').replace(/\'/g,'\\\''))+'\')">'
+              + '<i class="fa-solid fa-paper-plane"></i></button>'
+            : '';
+          return '<tr>'
+            +'<td><div class="func-cell">'
+              +'<div class="func-avatar" style="background:'+cor+'">'+initials(f.nome)+'</div>'
+              +'<div><div class="func-name">'+(f.nome||'—')+'</div>'
+              +'<div class="func-email">'+(f.email||'—')+'</div></div>'
+            +'</div></td>'
+            +'<td><span class="badge '+bi.cls+'"><i class="fa-solid '+bi.icon+'"></i>'+bi.label+'</span></td>'
+            +'<td><div class="horario-cell"><i class="fa-regular fa-clock"></i>'+(f.horario||'—')+'</div></td>'
+            +'<td style="font-size:.8rem;color:var(--text-secondary)">'+(f.tel||'—')+'</td>'
+            +'<td><span class="salary-cell">'+fmtSalary(f.salario)+'</span></td>'
+            +'<td>'+contaBadge+'</td>'
+            +'<td><div class="row-actions">'
+              +'<button class="action-btn" title="Detalhes"><i class="fa-solid fa-eye"></i></button>'
+              +'<button class="action-btn" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>'
+              +btnConvite
+              +'<button class="action-btn btn-del" title="Excluir"><i class="fa-solid fa-trash"></i></button>'
+            +'</div></td>'
+            +'</tr>';
+        }).join('');
+
+    /* Paginação */
+    document.getElementById('paginationInfo').innerHTML =
+      'Mostrando <strong>'+(total===0?0:start+1)+'–'+Math.min(start+PER_PAGE,total)
+      +'</strong> de <strong>'+total+'</strong>';
+    var btns = '';
+    btns += '<button class="pg-btn" onclick="goPage('+(currentPage-1)+')" '+(currentPage===1?'disabled':'')+'><i class="fa-solid fa-chevron-left"></i></button>';
+    for (var p=1;p<=pages;p++) btns += '<button class="pg-btn'+(p===currentPage?' active':'')+'" onclick="goPage('+p+')">'+p+'</button>';
+    btns += '<button class="pg-btn" onclick="goPage('+(currentPage+1)+')" '+(currentPage===pages?'disabled':'')+'><i class="fa-solid fa-chevron-right"></i></button>';
+    document.getElementById('paginationBtns').innerHTML = btns;
+  }
+
+  window.goPage      = function(p){ var pgs=Math.max(1,Math.ceil(getFiltered().length/PER_PAGE)); if(p<1||p>pgs)return; currentPage=p; render(); };
+  window.filterTable = function(q){ searchQuery=q; currentPage=1; render(); };
+  window.filterCargo = function(c,btn){ activeFilter=c; currentPage=1; document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); render(); };
+
+  /* ── Modal convite ───────────────────────────────────────── */
+  var modal = document.getElementById('conviteModal');
+
+  window.abrirConviteModal = function(funcId, nome) {
+    document.getElementById('conviteNomeModal').textContent  = 'Funcionário: ' + nome;
+    document.getElementById('conviteLoading').style.display  = 'block';
+    document.getElementById('conviteResult').style.display   = 'none';
+    document.getElementById('conviteErro').style.display     = 'none';
+    modal.style.display = 'flex';
+
+    fetch('/api/reenviar_convite_func/' + funcId, {method:'POST'})
+      .then(function(res){ return res.json(); })
+      .then(function(data){
+        document.getElementById('conviteLoading').style.display = 'none';
+        if (data.erro) {
+          document.getElementById('conviteErroMsg').textContent = data.erro;
+          document.getElementById('conviteErro').style.display  = 'block';
+        } else {
+          document.getElementById('conviteLinkInput').value     = data.link;
+          document.getElementById('conviteResult').style.display = 'block';
+        }
+      })
+      .catch(function(){
+        document.getElementById('conviteLoading').style.display = 'none';
+        document.getElementById('conviteErroMsg').textContent  = 'Erro de conexão ao gerar o link.';
+        document.getElementById('conviteErro').style.display   = 'block';
+      });
+  };
+
+  window.fecharConviteModal = function(){
+    modal.style.display = 'none';
+  };
+
+  modal.addEventListener('click', function(e){
+    if (e.target === modal) fecharConviteModal();
+  });
+
+  window.copiarConviteLink = function(){
+    var inp = document.getElementById('conviteLinkInput');
+    inp.select();
+    document.execCommand('copy');
+    var btn = document.getElementById('btnCopiar');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+    btn.style.background = '#10b981';
+    setTimeout(function(){
+      btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copiar';
+      btn.style.background = '#f59e0b';
+    }, 2500);
+  };
+
+  /* Init */
+  carregarFuncionarios();
+
+})();
+</script>
+
+{% endblock %}

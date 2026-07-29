@@ -1,0 +1,374 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chat_page.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="chat-page-header">
+  <div>
+    <h2>Chat do Condomínio</h2>
+    <p>Comunicação entre síndico, portaria e moradores</p>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span style="font-size:.75rem;color:var(--text-muted);display:flex;align-items:center;gap:5px">
+      <span style="width:7px;height:7px;background:#10b981;border-radius:50%;display:inline-block"></span>
+      4 contatos online
+    </span>
+  </div>
+</div>
+
+<!-- ── Chat container ──────────────────────────────────────── -->
+<div class="chat-container">
+
+  <!-- ── PAINEL DE CONTATOS (esquerda) ──────────────────── -->
+  <div class="contacts-panel">
+
+    <div class="contacts-header">
+      <h3><i class="fa-solid fa-comments" style="margin-right:6px"></i>Mensagens</h3>
+      <div class="contacts-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" id="contactSearch" placeholder="Buscar morador…"
+               oninput="filterContacts(this.value)">
+      </div>
+    </div>
+
+    <ul id="resident-list">
+      <li data-id="1" onclick="selectContact(this)">
+        <div class="contact-avatar" style="background:#2563eb">AO</div>
+        <div class="contact-info">
+          <div class="contact-name">Ana Oliveira</div>
+          <div class="contact-unit">Unidade 101</div>
+        </div>
+        <div class="contact-meta">
+          <span class="contact-time">09:32</span>
+          <span class="contact-badge">2</span>
+        </div>
+      </li>
+      <li data-id="2" onclick="selectContact(this)">
+        <div class="contact-avatar" style="background:#7c3aed">PO</div>
+        <div class="contact-info">
+          <div class="contact-name">Pedro Oliveira</div>
+          <div class="contact-unit">Unidade 101</div>
+        </div>
+        <div class="contact-meta">
+          <span class="contact-time">08:14</span>
+        </div>
+      </li>
+      <li data-id="3" onclick="selectContact(this)">
+        <div class="contact-avatar" style="background:#0d9488">LS</div>
+        <div class="contact-info">
+          <div class="contact-name">Lucas Santos</div>
+          <div class="contact-unit">Unidade 102</div>
+        </div>
+        <div class="contact-meta">
+          <span class="contact-time">Ontem</span>
+          <span class="contact-badge">1</span>
+        </div>
+      </li>
+      <li data-id="4" onclick="selectContact(this)">
+        <div class="contact-avatar" style="background:#d97706">MC</div>
+        <div class="contact-info">
+          <div class="contact-name">Marina Costa</div>
+          <div class="contact-unit">Unidade 201</div>
+        </div>
+        <div class="contact-meta">
+          <span class="contact-time">Ontem</span>
+        </div>
+      </li>
+      <li data-id="5" onclick="selectContact(this)">
+        <div class="contact-avatar" style="background:#dc2626">FS</div>
+        <div class="contact-info">
+          <div class="contact-name">Fernanda Silva</div>
+          <div class="contact-unit">Unidade 201</div>
+        </div>
+        <div class="contact-meta">
+          <span class="contact-time">Seg</span>
+        </div>
+      </li>
+      <li data-id="6" onclick="selectContact(this)">
+        <div class="contact-avatar" style="background:#0891b2">GO</div>
+        <div class="contact-info">
+          <div class="contact-name">Gustavo Oliveira</div>
+          <div class="contact-unit">Unidade A1</div>
+        </div>
+        <div class="contact-meta">
+          <span class="contact-time">Seg</span>
+        </div>
+      </li>
+      <li data-id="7" onclick="selectContact(this)">
+        <div class="contact-avatar" style="background:#4f46e5">AS</div>
+        <div class="contact-info">
+          <div class="contact-name">Amanda Santos</div>
+          <div class="contact-unit">Unidade A1</div>
+        </div>
+        <div class="contact-meta">
+          <span class="contact-time">Dom</span>
+        </div>
+      </li>
+      <li data-id="8" onclick="selectContact(this)">
+        <div class="contact-avatar" style="background:#be185d">JC</div>
+        <div class="contact-info">
+          <div class="contact-name">Juliana Costa</div>
+          <div class="contact-unit">Unidade A2</div>
+        </div>
+        <div class="contact-meta">
+          <span class="contact-time">Dom</span>
+        </div>
+      </li>
+    </ul>
+  </div><!-- /contacts-panel -->
+
+  <!-- ── PAINEL DE CHAT (direita) ───────────────────────── -->
+  <div class="chat-panel" id="chatPanel">
+
+    <!-- Estado inicial: nenhum contato selecionado -->
+    <div class="chat-empty" id="chatEmpty">
+      <i class="fa-solid fa-comments"></i>
+      <h3>Selecione um contato</h3>
+      <p>Escolha um morador na lista para iniciar a conversa</p>
+    </div>
+
+    <!-- Header do chat (oculto até selecionar) -->
+    <div class="chat-header" id="chatHeader" style="display:none">
+      <div class="chat-header-left">
+        <div class="chat-contact-avatar" id="chatAvatar"></div>
+        <div>
+          <div class="chat-contact-name" id="chatContactName">–</div>
+          <div class="chat-contact-status">Online</div>
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="chat-action-btn" title="Informações">
+          <i class="fa-solid fa-circle-info"></i>
+        </button>
+        <button class="chat-action-btn" title="Buscar na conversa">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+        <button class="chat-action-btn" title="Mais opções">
+          <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Área de mensagens -->
+    <div id="messages-list" style="display:none"></div>
+
+    <!-- Input (oculto até selecionar) -->
+    <form id="message-form" enctype="multipart/form-data" style="display:none">
+      <div class="msg-attach-btn" title="Anexar arquivo">
+        <i class="fa-solid fa-paperclip"></i>
+        <input type="file" id="file-input" accept="image/*, .pdf, .doc, .docx">
+      </div>
+
+      <div class="msg-input-wrap">
+        <textarea id="message-input" placeholder="Digite uma mensagem…"
+                  rows="1" onkeydown="handleEnter(event)"
+                  oninput="autoResize(this)"></textarea>
+      </div>
+
+      <button type="submit" class="msg-send-btn" title="Enviar">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </form>
+
+  </div><!-- /chat-panel -->
+
+</div><!-- /chat-container -->
+
+<script>
+(function(){
+  'use strict';
+
+  /* ── Dados de contatos ───────────────────────────────────── */
+  var contacts = {
+    1: { name:'Ana Oliveira',    unit:'Unidade 101', color:'#2563eb', initials:'AO' },
+    2: { name:'Pedro Oliveira',  unit:'Unidade 101', color:'#7c3aed', initials:'PO' },
+    3: { name:'Lucas Santos',    unit:'Unidade 102', color:'#0d9488', initials:'LS' },
+    4: { name:'Marina Costa',    unit:'Unidade 201', color:'#d97706', initials:'MC' },
+    5: { name:'Fernanda Silva',  unit:'Unidade 201', color:'#dc2626', initials:'FS' },
+    6: { name:'Gustavo Oliveira',unit:'Unidade A1',  color:'#0891b2', initials:'GO' },
+    7: { name:'Amanda Santos',   unit:'Unidade A1',  color:'#4f46e5', initials:'AS' },
+    8: { name:'Juliana Costa',   unit:'Unidade A2',  color:'#be185d', initials:'JC' },
+  };
+
+  /* Histórico local de mensagens (por id de contato) */
+  var localMsgs = {
+    1: [
+      { sender:'morador', text:'Olá! Precisava verificar sobre o barulho no corredor.',      time:'09:28', isUser:false },
+      { sender:'porteiro',text:'Bom dia, Ana! Vou verificar imediatamente.',                 time:'09:29', isUser:true  },
+      { sender:'morador', text:'Obrigada! Estava acontecendo desde cedo.',                    time:'09:30', isUser:false },
+      { sender:'porteiro',text:'Já resolvemos. Era uma entrega no andar de cima.',            time:'09:32', isUser:true  },
+    ],
+    2: [
+      { sender:'morador', text:'Boa tarde! Meu acesso ao app não está funcionando.',          time:'08:10', isUser:false },
+      { sender:'porteiro',text:'Boa tarde, Pedro! Vou passar para o suporte técnico.',        time:'08:14', isUser:true  },
+    ],
+    3: [
+      { sender:'morador', text:'Oi! Gostaria de fazer uma reserva da área gourmet.',          time:'Ontem', isUser:false },
+    ],
+    4: [],5: [],6: [],7: [],8: [],
+  };
+
+  var currentId = null;
+
+  /* ── Selecionar contato ─────────────────────────────────── */
+  window.selectContact = function(el) {
+    var id = parseInt(el.getAttribute('data-id'));
+    currentId = id;
+
+    /* Atualiza lista */
+    document.querySelectorAll('#resident-list li').forEach(function(li){
+      li.classList.remove('selected');
+      /* Remove badge ao ler */
+      var badge = li.querySelector('.contact-badge');
+      if(badge) badge.remove();
+    });
+    el.classList.add('selected');
+
+    var c = contacts[id];
+
+    /* Header */
+    document.getElementById('chatEmpty').style.display  = 'none';
+    document.getElementById('chatHeader').style.display = '';
+    document.getElementById('messages-list').style.display = '';
+    document.getElementById('message-form').style.display = '';
+
+    var av = document.getElementById('chatAvatar');
+    av.textContent = c.initials;
+    av.style.background = c.color;
+    document.getElementById('chatContactName').textContent = c.name + ' — ' + c.unit;
+
+    renderMessages(id);
+    document.getElementById('message-input').focus();
+  };
+
+  /* ── Renderizar mensagens ───────────────────────────────── */
+  function renderMessages(id){
+    var box  = document.getElementById('messages-list');
+    var msgs = localMsgs[id] || [];
+    var c    = contacts[id];
+
+    if(msgs.length === 0){
+      box.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.82rem">Nenhuma mensagem ainda. Diga olá! 👋</div>';
+      return;
+    }
+
+    var html = '<div class="msg-date-sep"><span>Hoje</span></div>';
+    msgs.forEach(function(m){
+      var cls = m.isUser ? 'sent' : 'received';
+      var senderName = m.isUser ? 'Você (Portaria)' : c.name;
+      var avatarBg   = m.isUser ? 'var(--brand)' : c.color;
+      var avatarInit = m.isUser ? 'PO' : c.initials;
+
+      html += '<div class="msg-row ' + cls + '">';
+      html +=   '<div class="msg-avatar" style="background:' + avatarBg + '">' + avatarInit + '</div>';
+      html +=   '<div class="msg-bubble-wrap">';
+      html +=     '<div class="msg-sender-name">' + senderName + '</div>';
+      html +=     '<div class="msg-bubble">' + escapeHtml(m.text);
+      if(m.file) html += '<a class="msg-file" href="#"><i class="fa-solid fa-file"></i>' + m.file + '</a>';
+      html +=     '</div>';
+      html +=     '<div class="msg-time">' + m.time + '</div>';
+      html +=   '</div>';
+      html += '</div>';
+    });
+
+    box.innerHTML = html;
+    box.scrollTop = box.scrollHeight;
+  }
+
+  /* ── Enviar mensagem (via fetch ao backend) ─────────────── */
+  document.getElementById('message-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!currentId) return;
+
+    var input = document.getElementById('message-input');
+    var file  = document.getElementById('file-input');
+    var text  = input.value.trim();
+    var f     = file.files[0];
+
+    if(!text && !f) return;
+
+    /* Adiciona localmente */
+    var now  = new Date();
+    var time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+    var msg  = { sender:'porteiro', text: text || (f ? f.name : ''), time: time, isUser: true };
+    if(f) msg.file = f.name;
+    if(!localMsgs[currentId]) localMsgs[currentId] = [];
+    localMsgs[currentId].push(msg);
+
+    input.value = '';
+    input.style.height = '';
+    file.value = '';
+
+    renderMessages(currentId);
+
+    /* Tenta enviar para o backend (localhost:3000) */
+    var formData = new FormData();
+    if(text) { formData.append('text', text); formData.append('sender', 'porteiro/sindico'); }
+    if(f)    formData.append('file', f);
+
+    fetch('http://localhost:3000/api/messages/' + currentId, { method:'POST', body: formData })
+      .catch(function(){ /* backend offline: já exibiu localmente */ });
+  });
+
+  /* ── Carregar mensagens do backend ─────────────────────── */
+  function loadFromBackend(id){
+    fetch('http://localhost:3000/api/messages/' + id)
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        if(!data || !data.length) return;
+        localMsgs[id] = data.map(function(m){
+          return {
+            sender: m.sender,
+            text:   m.text || '',
+            file:   m.file_url ? m.file_url.split('/').pop() : null,
+            time:   '',
+            isUser: m.sender === 'porteiro/sindico',
+          };
+        });
+        if(currentId === id) renderMessages(id);
+      })
+      .catch(function(){});
+  }
+
+  /* ── Filtrar contatos ────────────────────────────────────── */
+  window.filterContacts = function(q){
+    q = q.toLowerCase();
+    document.querySelectorAll('#resident-list li').forEach(function(li){
+      var name = li.querySelector('.contact-name').textContent.toLowerCase();
+      li.style.display = name.includes(q) ? '' : 'none';
+    });
+  };
+
+  /* ── Auto-resize textarea ───────────────────────────────── */
+  window.autoResize = function(el){
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  };
+
+  /* ── Enter envia, Shift+Enter quebra linha ──────────────── */
+  window.handleEnter = function(e){
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      document.getElementById('message-form').dispatchEvent(new Event('submit'));
+    }
+  };
+
+  /* ── Escape HTML ────────────────────────────────────────── */
+  function escapeHtml(str){
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* Seleciona o primeiro contato ao carregar */
+  var firstLi = document.querySelector('#resident-list li');
+  if(firstLi){ selectContact(firstLi); loadFromBackend(1); }
+
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,250 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/unidades.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-header-left">
+    <h2>Unidades</h2>
+    <p>Gerencie todas as unidades do condomínio</p>
+  </div>
+  <a href="{{ url_for('cadastro_unit') }}" class="btn-primary">
+    <i class="fa-solid fa-plus"></i> Cadastrar Unidade
+  </a>
+</div>
+
+<!-- ── Stats ───────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-icon si-blue"><i class="fa-solid fa-door-closed"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="totalUnits">25</span>
+      <span class="stat-label">Total</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-green"><i class="fa-solid fa-house-circle-check"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="occupiedUnits">–</span>
+      <span class="stat-label">Ocupadas</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-amber"><i class="fa-solid fa-key"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="rentedUnits">–</span>
+      <span class="stat-label">Alugadas</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-cyan"><i class="fa-solid fa-door-open"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="availableUnits">–</span>
+      <span class="stat-label">Disponíveis</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Table card ──────────────────────────────────────────── -->
+<div class="table-card">
+
+  <div class="table-card-toolbar">
+    <div class="table-search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" id="tableSearch" class="table-search"
+             placeholder="Buscar unidade, proprietário…" oninput="filterTable(this.value)">
+    </div>
+    <div class="table-filters">
+      <button class="filter-btn active" onclick="filterStatus('todos', this)">Todos</button>
+      <button class="filter-btn" onclick="filterStatus('Ocupada', this)">Ocupadas</button>
+      <button class="filter-btn" onclick="filterStatus('Alugado', this)">Alugadas</button>
+      <button class="filter-btn" onclick="filterStatus('Disponível', this)">Disponíveis</button>
+    </div>
+  </div>
+
+  <div style="overflow-x:auto">
+    <table class="units-table" id="unitsTable">
+      <thead>
+        <tr>
+          <th>Unidade</th>
+          <th>Proprietário / Residente</th>
+          <th>Tipo</th>
+          <th>Área (m²)</th>
+          <th>Telefone</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="unitsBody">
+        <!-- preenchido pelo JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-pagination">
+    <span class="pagination-info" id="paginationInfo"></span>
+    <div class="pagination-btns" id="paginationBtns"></div>
+  </div>
+
+</div><!-- /table-card -->
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Dados das unidades (espelha o banco) ──────────────── */
+  var unidades = [
+    { id:1,  cond:1, num:'101', prop:'Carlos Silva',       tel:'(11) 1234-5678', email:'carlos.silva@email.com',       tipo:'Apartamento', status:'Ocupada',    area:'100' },
+    { id:2,  cond:1, num:'102', prop:'Mariana Santos',     tel:'(11) 2345-6789', email:'mariana.santos@email.com',     tipo:'Apartamento', status:'Disponível', area:'90'  },
+    { id:3,  cond:1, num:'201', prop:'João Oliveira',      tel:'(11) 3456-7890', email:'joao.oliveira@email.com',      tipo:'Cobertura',   status:'Alugado',    area:'150' },
+    { id:4,  cond:1, num:'202', prop:'Ana Costa',          tel:'(11) 4567-8901', email:'ana.costa@email.com',          tipo:'Apartamento', status:'Disponível', area:'95'  },
+    { id:5,  cond:1, num:'301', prop:'Paulo Souza',        tel:'(11) 5678-9012', email:'paulo.souza@email.com',        tipo:'Apartamento', status:'Ocupada',    area:'110' },
+    { id:6,  cond:2, num:'A1',  prop:'Pedro Oliveira',     tel:'(21) 5555-5555', email:'pedro.oliveira@email.com',     tipo:'Casa',        status:'Ocupada',    area:'200' },
+    { id:7,  cond:2, num:'A2',  prop:'Luciana Costa',      tel:'(21) 6666-6666', email:'luciana.costa@email.com',      tipo:'Apartamento', status:'Disponível', area:'85'  },
+    { id:8,  cond:2, num:'B1',  prop:'Ana Oliveira',       tel:'(21) 7777-7777', email:'ana.oliveira@email.com',       tipo:'Cobertura',   status:'Ocupada',    area:'160' },
+    { id:9,  cond:2, num:'B2',  prop:'Fernando Silva',     tel:'(21) 8888-8888', email:'fernando.silva@email.com',     tipo:'Apartamento', status:'Disponível', area:'100' },
+    { id:10, cond:2, num:'C1',  prop:'Marta Santos',       tel:'(21) 9999-9999', email:'marta.santos@email.com',       tipo:'Apartamento', status:'Ocupada',    area:'120' },
+    { id:11, cond:3, num:'101', prop:'Carla Oliveira',     tel:'(31) 1111-1111', email:'carla.oliveira@email.com',     tipo:'Apartamento', status:'Ocupada',    area:'95'  },
+    { id:12, cond:3, num:'102', prop:'Renato Silva',       tel:'(31) 2222-2222', email:'renato.silva@email.com',       tipo:'Cobertura',   status:'Disponível', area:'140' },
+    { id:13, cond:3, num:'201', prop:'Mariana Costa',      tel:'(31) 3333-3333', email:'mariana.costa@email.com',      tipo:'Apartamento', status:'Alugado',    area:'105' },
+    { id:14, cond:3, num:'202', prop:'Joana Santos',       tel:'(31) 4444-4444', email:'joana.santos@email.com',       tipo:'Apartamento', status:'Disponível', area:'100' },
+    { id:15, cond:3, num:'301', prop:'Luiz Oliveira',      tel:'(31) 5555-5555', email:'luiz.oliveira@email.com',      tipo:'Casa',        status:'Ocupada',    area:'180' },
+    { id:16, cond:4, num:'101', prop:'Ricardo Santos',     tel:'(61) 1111-1111', email:'ricardo.santos@email.com',     tipo:'Apartamento', status:'Disponível', area:'90'  },
+    { id:17, cond:4, num:'102', prop:'Carolina Oliveira',  tel:'(61) 2222-2222', email:'carolina.oliveira@email.com',  tipo:'Apartamento', status:'Ocupada',    area:'100' },
+    { id:18, cond:4, num:'201', prop:'Roberto Silva',      tel:'(61) 3333-3333', email:'roberto.silva@email.com',      tipo:'Casa',        status:'Alugado',    area:'150' },
+    { id:19, cond:4, num:'202', prop:'Fernanda Costa',     tel:'(61) 4444-4444', email:'fernanda.costa@email.com',     tipo:'Apartamento', status:'Ocupada',    area:'110' },
+    { id:20, cond:4, num:'301', prop:'Paula Santos',       tel:'(61) 5555-5555', email:'paula.santos@email.com',       tipo:'Cobertura',   status:'Disponível', area:'160' },
+    { id:21, cond:5, num:'101', prop:'Guilherme Oliveira', tel:'(41) 1111-1111', email:'guilherme.oliveira@email.com', tipo:'Apartamento', status:'Ocupada',    area:'100' },
+    { id:22, cond:5, num:'102', prop:'Helena Silva',       tel:'(41) 2222-2222', email:'helena.silva@email.com',       tipo:'Cobertura',   status:'Alugado',    area:'150' },
+    { id:23, cond:5, num:'201', prop:'Luis Costa',         tel:'(41) 3333-3333', email:'luis.costa@email.com',         tipo:'Casa',        status:'Alugado',    area:'180' },
+    { id:24, cond:5, num:'202', prop:'Alice Santos',       tel:'(41) 4444-4444', email:'alice.santos@email.com',       tipo:'Apartamento', status:'Disponível', area:'95'  },
+    { id:25, cond:5, num:'301', prop:'Júlia Oliveira',     tel:'(41) 5555-5555', email:'julia.oliveira@email.com',     tipo:'Apartamento', status:'Ocupada',    area:'110' },
+  ];
+
+  /* ── Config ─────────────────────────────────────────────── */
+  var ROWS_PER_PAGE = 8;
+  var currentPage   = 1;
+  var activeFilter  = 'todos';
+  var searchQuery   = '';
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+  function initials(name) {
+    var parts = name.trim().split(' ');
+    return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+  }
+
+  function badgeClass(status) {
+    var map = { 'Ocupada': 'badge-occupied', 'Disponível': 'badge-available',
+                'Alugado': 'badge-rented' };
+    return map[status] || 'badge-inactive';
+  }
+
+  function badgeIcon(status) {
+    var map = { 'Ocupada': 'fa-house-user', 'Disponível': 'fa-circle-check', 'Alugado': 'fa-key' };
+    return map[status] || 'fa-circle';
+  }
+
+  function tipoIcon(tipo) {
+    var map = { 'Apartamento': 'fa-building', 'Casa': 'fa-house', 'Cobertura': 'fa-star' };
+    return map[tipo] || 'fa-door-open';
+  }
+
+  /* ── Filtragem ───────────────────────────────────────────── */
+  function getFiltered() {
+    return unidades.filter(function (u) {
+      var matchStatus = (activeFilter === 'todos') || (u.status === activeFilter);
+      var q = searchQuery.toLowerCase();
+      var matchSearch = !q ||
+        u.num.toLowerCase().includes(q)  ||
+        u.prop.toLowerCase().includes(q) ||
+        u.tipo.toLowerCase().includes(q) ||
+        u.status.toLowerCase().includes(q);
+      return matchStatus && matchSearch;
+    });
+  }
+
+  /* ── Render ──────────────────────────────────────────────── */
+  function render() {
+    var filtered = getFiltered();
+    var total    = filtered.length;
+    var pages    = Math.max(1, Math.ceil(total / ROWS_PER_PAGE));
+    currentPage  = Math.min(currentPage, pages);
+
+    var start  = (currentPage - 1) * ROWS_PER_PAGE;
+    var paged  = filtered.slice(start, start + ROWS_PER_PAGE);
+    var tbody  = document.getElementById('unitsBody');
+
+    /* Atualiza stats */
+    document.getElementById('occupiedUnits').textContent  = unidades.filter(function(u){ return u.status==='Ocupada';    }).length;
+    document.getElementById('rentedUnits').textContent    = unidades.filter(function(u){ return u.status==='Alugado';    }).length;
+    document.getElementById('availableUnits').textContent = unidades.filter(function(u){ return u.status==='Disponível'; }).length;
+
+    /* Linhas */
+    tbody.innerHTML = paged.length === 0
+      ? '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="fa-solid fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:8px;opacity:.4"></i>Nenhuma unidade encontrada</td></tr>'
+      : paged.map(function (u) {
+          return '<tr data-status="' + u.status + '">' +
+            '<td><span class="unit-number">' + u.num + '</span></td>' +
+            '<td><div class="owner-cell">' +
+              '<div class="owner-avatar">' + initials(u.prop) + '</div>' +
+              '<div><div class="owner-name">' + u.prop + '</div>' +
+              '<div class="owner-email">' + u.email + '</div></div></div></td>' +
+            '<td><span class="unit-type"><i class="fa-solid ' + tipoIcon(u.tipo) + '"></i>' + u.tipo + '</span></td>' +
+            '<td><span class="unit-area">' + u.area + ' m²</span></td>' +
+            '<td style="font-size:.8rem;color:var(--text-secondary)">' + u.tel + '</td>' +
+            '<td><span class="badge ' + badgeClass(u.status) + '"><i class="fa-solid ' + badgeIcon(u.status) + '"></i>' + u.status + '</span></td>' +
+            '<td><div class="row-actions">' +
+              '<button class="action-btn" title="Ver detalhes"><i class="fa-solid fa-eye"></i></button>' +
+              '<button class="action-btn" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>' +
+              '<button class="action-btn btn-del" title="Excluir"><i class="fa-solid fa-trash"></i></button>' +
+            '</div></td></tr>';
+        }).join('');
+
+    /* Pagination info */
+    document.getElementById('paginationInfo').innerHTML =
+      'Mostrando <strong>' + (total === 0 ? 0 : start + 1) + '–' + Math.min(start + ROWS_PER_PAGE, total) + '</strong> de <strong>' + total + '</strong>';
+
+    /* Pagination buttons */
+    var btns = '';
+    btns += '<button class="pg-btn" onclick="goPage(' + (currentPage-1) + ')" ' + (currentPage===1?'disabled':'') + '><i class="fa-solid fa-chevron-left"></i></button>';
+    for (var p = 1; p <= pages; p++) {
+      btns += '<button class="pg-btn' + (p===currentPage?' active':'') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+    }
+    btns += '<button class="pg-btn" onclick="goPage(' + (currentPage+1) + ')" ' + (currentPage===pages?'disabled':'') + '><i class="fa-solid fa-chevron-right"></i></button>';
+    document.getElementById('paginationBtns').innerHTML = btns;
+  }
+
+  /* ── Funções globais ─────────────────────────────────────── */
+  window.goPage = function (p) {
+    var filtered = getFiltered();
+    var pages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
+    if (p < 1 || p > pages) return;
+    currentPage = p;
+    render();
+  };
+
+  window.filterTable = function (q) {
+    searchQuery = q;
+    currentPage = 1;
+    render();
+  };
+
+  window.filterStatus = function (status, btn) {
+    activeFilter = status;
+    currentPage  = 1;
+    document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    render();
+  };
+
+  /* ── Init ────────────────────────────────────────────────── */
+  render();
+
+})();
+</script>
+
+{% endblock %}

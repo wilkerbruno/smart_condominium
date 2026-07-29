@@ -1,0 +1,350 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="form-page-header">
+  <div>
+    <h2>Cadastrar Funcionário</h2>
+    <p>Registre um novo funcionário no condomínio</p>
+  </div>
+  <a href="{{ url_for('funcionarios') }}" class="btn-back">
+    <i class="fa-solid fa-arrow-left"></i> Voltar
+  </a>
+</div>
+
+<!-- ── Wizard ──────────────────────────────────────────────── -->
+<form id="unit-registration-form" action="/salvar_funcionario" method="POST">
+<div class="form-wrapper">
+
+  <!-- Sidebar de steps -->
+  <div class="form-steps">
+    <p class="form-steps-title">Etapas</p>
+
+    <div class="step-item active" id="step-nav-1" onclick="goStep(1)">
+      <div class="step-dot">1</div>
+      <div class="step-info">
+        <span class="step-label">Identificação</span>
+        <span class="step-sub">Nome e cargo</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-2" onclick="goStep(2)">
+      <div class="step-dot">2</div>
+      <div class="step-info">
+        <span class="step-label">Contato</span>
+        <span class="step-sub">Telefone e e-mail</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-3" onclick="goStep(3)">
+      <div class="step-dot">3</div>
+      <div class="step-info">
+        <span class="step-label">Remuneração</span>
+        <span class="step-sub">Salário e benefícios</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-4" onclick="goStep(4)">
+      <div class="step-dot">4</div>
+      <div class="step-info">
+        <span class="step-label">Confirmação</span>
+        <span class="step-sub">Revisar e salvar</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card do formulário -->
+  <div class="form-card">
+
+    <!-- ── STEP 1: Identificação ──────────────────────────── -->
+    <div class="form-section active" id="step-1">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-id-badge"></i></div>
+        <div>
+          <h3>Identificação do Funcionário</h3>
+          <p>Dados pessoais, cargo e horário de trabalho</p>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-2">
+        <div class="field col-span-2">
+          <label for="nome_funcionario">Nome Completo <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="nome_funcionario" name="nome_funcionario"
+                   placeholder="Nome completo do funcionário" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="cpf_funcionario">CPF <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-id-card"></i>
+            <input type="text" id="cpf_funcionario" name="cpf_funcionario"
+                   placeholder="000.000.000-00" maxlength="14" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="Cargo_funcionario">Cargo <span class="required">*</span></label>
+          <select id="Cargo_funcionario" name="Cargo_funcionario" required>
+            <option value="">Selecione…</option>
+            <option value="sindico">Síndico</option>
+            <option value="porteiro">Porteiro</option>
+            <option value="zelador">Zelador</option>
+            <option value="seguranca">Segurança</option>
+            <option value="limpeza">Limpeza</option>
+            <option value="administrador">Administrador</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+
+        <div class="field col-span-2">
+          <label for="horario_trabalho">Horário de Trabalho <span class="required">*</span></label>
+          <select id="horario_trabalho" name="horario_trabalho" required>
+            <option value="">Selecione…</option>
+            <option value="Segunda a sexta, 08:00 - 17:00">Segunda a sexta, 08:00 – 17:00</option>
+            <option value="Segunda a sexta, 07:00 - 16:00">Segunda a sexta, 07:00 – 16:00</option>
+            <option value="Segunda a sexta, 09:00 - 18:00">Segunda a sexta, 09:00 – 18:00</option>
+            <option value="Segunda a sexta, 08:30 - 17:30">Segunda a sexta, 08:30 – 17:30</option>
+            <option value="Noite de 18:00 as 08:00">Noite, 18:00 – 08:00</option>
+            <option value="Plantão 12x36">Plantão 12×36</option>
+            <option value="Plantão 24x48">Plantão 24×48</option>
+          </select>
+        </div>
+      </div>
+    </div><!-- /step-1 -->
+
+    <!-- ── STEP 2: Contato ───────────────────────────────── -->
+    <div class="form-section" id="step-2">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-phone"></i></div>
+        <div>
+          <h3>Dados de Contato</h3>
+          <p>Telefone e e-mail do funcionário</p>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-2">
+        <div class="field">
+          <label for="telefone_morador">Telefone <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-phone"></i>
+            <input type="tel" id="telefone_morador" name="telefone_morador"
+                   placeholder="(00) 00000-0000" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email_funcionario">E-mail</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="email_funcionario" name="email_funcionario"
+                   placeholder="funcionario@email.com">
+          </div>
+        </div>
+      </div>
+    </div><!-- /step-2 -->
+
+    <!-- ── STEP 3: Remuneração ───────────────────────────── -->
+    <div class="form-section" id="step-3">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-brazilian-real-sign"></i></div>
+        <div>
+          <h3>Remuneração e Benefícios</h3>
+          <p>Salário, vale-transporte e vale-refeição</p>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-2">
+        <div class="field col-span-2">
+          <label for="salario_funcionario">Salário (R$) <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-brazilian-real-sign"></i>
+            <input type="number" id="salario_funcionario" name="salario_funcionario"
+                   placeholder="Ex: 2500.00" min="0" step="0.01" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="transporte_funcionario">Vale-Transporte (R$)</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-bus"></i>
+            <input type="number" id="transporte_funcionario" name="transporte_funcionario"
+                   placeholder="Ex: 220.00" min="0" step="0.01">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="refeicao_funcionario">Vale-Refeição (R$)</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-utensils"></i>
+            <input type="number" id="refeicao_funcionario" name="refeicao_funcionario"
+                   placeholder="Ex: 440.00" min="0" step="0.01">
+          </div>
+        </div>
+
+        <!-- Preview do custo total -->
+        <div class="field col-span-2">
+          <div id="custoPreview" style="
+            background: var(--brand-light);
+            border: 1px solid rgba(37,99,235,.2);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+          ">
+            <span style="font-size:.82rem;color:var(--brand);font-weight:600">
+              <i class="fa-solid fa-calculator"></i> Custo total estimado (salário + benefícios):
+            </span>
+            <span id="custoTotal" style="font-size:1rem;font-weight:700;color:var(--brand);font-family:var(--font-mono)">R$ 0,00</span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /step-3 -->
+
+    <!-- ── STEP 4: Confirmação ───────────────────────────── -->
+    <div class="form-section" id="step-4">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+          <h3>Confirmar Cadastro</h3>
+          <p>Revise os dados antes de salvar</p>
+        </div>
+      </div>
+      <div id="reviewPanel" style="display:flex;flex-direction:column;gap:16px;"></div>
+    </div><!-- /step-4 -->
+
+    <!-- Footer -->
+    <div class="form-footer">
+      <span class="form-footer-info" id="stepInfo">Etapa 1 de 4</span>
+      <div class="form-footer-actions">
+        <button type="button" class="btn-step btn-prev" id="btnPrev"
+                onclick="prevStep()" style="display:none">
+          <i class="fa-solid fa-arrow-left"></i> Anterior
+        </button>
+        <button type="button" class="btn-step btn-next" id="btnNext"
+                onclick="nextStep()">
+          Próximo <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button type="submit" class="btn-step btn-submit" id="btnSubmit"
+                style="display:none">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar Funcionário
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /form-card -->
+</div><!-- /form-wrapper -->
+</form>
+
+<script>
+(function () {
+  var TOTAL   = 4;
+  var current = 1;
+
+  function update() {
+    for (var i = 1; i <= TOTAL; i++) {
+      var sec = document.getElementById('step-' + i);
+      var nav = document.getElementById('step-nav-' + i);
+      if (sec) sec.classList.toggle('active', i === current);
+      if (nav) {
+        nav.classList.remove('active', 'done');
+        if (i === current) nav.classList.add('active');
+        else if (i < current) nav.classList.add('done');
+      }
+    }
+    document.getElementById('btnPrev').style.display   = current > 1      ? '' : 'none';
+    document.getElementById('btnNext').style.display   = current < TOTAL  ? '' : 'none';
+    document.getElementById('btnSubmit').style.display = current === TOTAL ? '' : 'none';
+    document.getElementById('stepInfo').textContent    = 'Etapa ' + current + ' de ' + TOTAL;
+    if (current === TOTAL) buildReview();
+  }
+
+  /* Custo total em tempo real */
+  function calcCusto() {
+    var sal  = parseFloat(document.getElementById('salario_funcionario').value)    || 0;
+    var trn  = parseFloat(document.getElementById('transporte_funcionario').value) || 0;
+    var ref  = parseFloat(document.getElementById('refeicao_funcionario').value)   || 0;
+    var tot  = sal + trn + ref;
+    document.getElementById('custoTotal').textContent =
+      'R$ ' + tot.toLocaleString('pt-BR', {minimumFractionDigits:2});
+  }
+  ['salario_funcionario','transporte_funcionario','refeicao_funcionario'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', calcCusto);
+  });
+
+  function val(id) {
+    var el = document.getElementById(id);
+    return el && el.value ? el.value : '—';
+  }
+
+  function fmtMoney(id) {
+    var v = parseFloat(document.getElementById(id) && document.getElementById(id).value) || 0;
+    return v > 0 ? 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2}) : '—';
+  }
+
+  function reviewGroup(title, icon, rows) {
+    var html = '<div style="background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">';
+    html += '<div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:var(--text-primary)">';
+    html += '<i class="fa-solid ' + icon + '" style="color:var(--brand)"></i>' + title + '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(2,1fr)">';
+    rows.forEach(function (r) {
+      html += '<div style="padding:10px 18px;border-bottom:1px solid var(--border)">';
+      html += '<div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:3px">' + r[0] + '</div>';
+      html += '<div style="font-size:.85rem;font-weight:500;color:var(--text-primary)">' + r[1] + '</div></div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  function buildReview() {
+    document.getElementById('reviewPanel').innerHTML =
+      reviewGroup('Identificação', 'fa-id-badge', [
+        ['Nome',     val('nome_funcionario')],
+        ['CPF',      val('cpf_funcionario')],
+        ['Cargo',    val('Cargo_funcionario')],
+        ['Horário',  val('horario_trabalho')],
+      ]) +
+      reviewGroup('Contato', 'fa-phone', [
+        ['Telefone', val('telefone_morador')],
+        ['E-mail',   val('email_funcionario')],
+        ['',''], ['',''],
+      ]) +
+      reviewGroup('Remuneração', 'fa-brazilian-real-sign', [
+        ['Salário',          fmtMoney('salario_funcionario')],
+        ['Vale-Transporte',  fmtMoney('transporte_funcionario')],
+        ['Vale-Refeição',    fmtMoney('refeicao_funcionario')],
+        ['Total Estimado',   document.getElementById('custoTotal').textContent],
+      ]);
+  }
+
+  /* Máscara CPF */
+  var cpfEl = document.getElementById('cpf_funcionario');
+  if (cpfEl) {
+    cpfEl.addEventListener('input', function () {
+      var v = this.value.replace(/\D/g,'').slice(0,11);
+      if (v.length>9) v=v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6,9)+'-'+v.slice(9);
+      else if (v.length>6) v=v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6);
+      else if (v.length>3) v=v.slice(0,3)+'.'+v.slice(3);
+      this.value=v;
+    });
+  }
+
+  window.goStep   = function (n) { if (n>=1&&n<=TOTAL){current=n;update();} };
+  window.nextStep = function ()  { if (current<TOTAL){current++;update();} };
+  window.prevStep = function ()  { if (current>1)    {current--;update();} };
+
+  update();
+})();
+</script>
+
+{% endblock %}

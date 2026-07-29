@@ -1,0 +1,363 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/recados.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="recados-header">
+  <div class="recados-header-left">
+    <h2>Quadro de Recados</h2>
+    <p>Mural de comunicados, avisos e mensagens do condomínio</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:.75rem;color:var(--text-muted)" id="postCount">0 recados</span>
+  </div>
+</div>
+
+<!-- ── Layout principal ────────────────────────────────────── -->
+<div class="recados-layout">
+
+  <!-- ── Feed de recados (esquerda) ─────────────────────── -->
+  <div>
+
+    <!-- Filtros -->
+    <div class="feed-toolbar">
+      <div class="feed-filters">
+        <button class="feed-filter-btn active" onclick="setFilter('todos',this)">
+          <i class="fa-solid fa-grip"></i> Todos
+        </button>
+        <button class="feed-filter-btn" onclick="setFilter('aviso',this)">
+          <i class="fa-solid fa-bullhorn"></i> Avisos
+        </button>
+        <button class="feed-filter-btn" onclick="setFilter('urgente',this)">
+          <i class="fa-solid fa-triangle-exclamation"></i> Urgente
+        </button>
+        <button class="feed-filter-btn" onclick="setFilter('manutencao',this)">
+          <i class="fa-solid fa-wrench"></i> Manutenção
+        </button>
+        <button class="feed-filter-btn" onclick="setFilter('evento',this)">
+          <i class="fa-solid fa-calendar-star"></i> Eventos
+        </button>
+      </div>
+      <select class="feed-sort" onchange="setSort(this.value)">
+        <option value="recente">Mais recentes</option>
+        <option value="antigo">Mais antigos</option>
+        <option value="curtidas">Mais curtidos</option>
+      </select>
+    </div>
+
+    <!-- Posts dinâmicos -->
+    <div id="posts"></div>
+
+  </div>
+
+  <!-- ── Formulário novo recado (direita) ───────────────── -->
+  <div class="new-post-card">
+    <div class="new-post-header">
+      <i class="fa-solid fa-pen-to-square"></i>
+      <h3>Novo Recado</h3>
+    </div>
+
+    <form id="postForum">
+      <div class="new-post-body">
+
+        <div class="np-field">
+          <label>Você é</label>
+          <select id="postAuthor">
+            <option value="Síndico">👔 Síndico</option>
+            <option value="Portaria">🚪 Portaria</option>
+            <option value="Administração">🏢 Administração</option>
+            <option value="Morador">🏠 Morador</option>
+          </select>
+        </div>
+
+        <div class="np-field">
+          <label>Categoria</label>
+          <select id="postCategory">
+            <option value="aviso">📢 Aviso Geral</option>
+            <option value="urgente">🚨 Urgente</option>
+            <option value="info">ℹ️ Informação</option>
+            <option value="manutencao">🔧 Manutenção</option>
+            <option value="evento">🎉 Evento</option>
+          </select>
+        </div>
+
+        <div class="np-field">
+          <label>Título</label>
+          <input type="text" id="postTitle" placeholder="Ex: Reunião de condomínio…">
+        </div>
+
+        <div class="np-field">
+          <label>Mensagem *</label>
+          <textarea id="question" placeholder="Escreva seu recado aqui…" required></textarea>
+        </div>
+
+        <div class="np-field">
+          <label>Imagem (opcional)</label>
+          <div class="img-upload-area">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Clique para anexar uma imagem</span>
+            <input type="file" id="imageInput" accept="image/*" onchange="previewImg(this)">
+          </div>
+          <img id="imgPreview" class="img-preview" alt="Preview">
+        </div>
+
+      </div>
+
+      <div class="new-post-footer">
+        <button type="submit" class="btn-post">
+          <i class="fa-solid fa-paper-plane"></i> Publicar Recado
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div><!-- /recados-layout -->
+
+<script>
+(function(){
+  'use strict';
+
+  /* ── Config ─────────────────────────────────────────────── */
+  var CAT_LABEL = {
+    aviso:     { label:'Aviso',      cls:'cat-aviso',      stripe:'stripe-aviso',      icon:'fa-bullhorn'            },
+    urgente:   { label:'Urgente',    cls:'cat-urgente',    stripe:'stripe-urgente',    icon:'fa-triangle-exclamation'},
+    info:      { label:'Info',       cls:'cat-info',       stripe:'stripe-info',       icon:'fa-circle-info'         },
+    manutencao:{ label:'Manutenção', cls:'cat-manutencao', stripe:'stripe-manutencao', icon:'fa-wrench'              },
+    evento:    { label:'Evento',     cls:'cat-evento',     stripe:'stripe-evento',     icon:'fa-calendar-star'       },
+  };
+
+  var AUTHOR_COLORS = {
+    'Síndico':     '#2563eb', 'Portaria':    '#7c3aed',
+    'Administração':'#0d9488','Morador':     '#d97706',
+  };
+
+  function getInitials(name){ var p=name.split(' ');return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase(); }
+  function timeAgo(ts){
+    var s=Math.floor((Date.now()-ts)/1000);
+    if(s<60) return 'Agora mesmo';
+    if(s<3600) return Math.floor(s/60)+'min atrás';
+    if(s<86400) return Math.floor(s/3600)+'h atrás';
+    return new Date(ts).toLocaleDateString('pt-BR');
+  }
+  function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ── Estado ─────────────────────────────────────────────── */
+  var posts = [
+    {
+      id: 1, ts: Date.now()-7200000,
+      author:'Síndico', title:'Manutenção do Elevador',
+      text:'Informamos que o elevador social passará por manutenção preventiva na próxima sexta-feira, das 08h às 12h. Durante este período, utilize as escadas.',
+      category:'manutencao', likes:5, liked:false,
+      image: null, responses: [
+        { author:'Portaria', text:'Já foi comunicado a todos os moradores por e-mail.' }
+      ]
+    },
+    {
+      id: 2, ts: Date.now()-3600000,
+      author:'Administração', title:'Assembleia Geral Ordinária',
+      text:'Convocamos todos os condôminos para a Assembleia Geral Ordinária que será realizada no próximo sábado às 10h no salão de festas. Pauta: prestação de contas 2024 e eleição de síndico.',
+      category:'evento', likes:12, liked:false,
+      image: null, responses: []
+    },
+    {
+      id: 3, ts: Date.now()-1800000,
+      author:'Portaria', title:'⚠️ Portão com defeito',
+      text:'Comunicamos que o portão da garagem está com defeito no sistema de abertura automática. Nossa equipe de manutenção já foi acionada. Utilize o portão de pedestres enquanto o problema é solucionado.',
+      category:'urgente', likes:8, liked:false,
+      image: null, responses: [
+        { author:'Síndico', text:'Já acionamos a empresa responsável. Previsão de reparo: 2 horas.' }
+      ]
+    },
+  ];
+
+  var currentFilter = 'todos';
+  var currentSort   = 'recente';
+  var nextId        = 4;
+
+  /* ── Render ──────────────────────────────────────────────── */
+  function render(){
+    var container = document.getElementById('posts');
+    var filtered  = posts.filter(function(p){
+      return currentFilter === 'todos' || p.category === currentFilter;
+    });
+
+    var sorted = filtered.slice().sort(function(a,b){
+      if(currentSort === 'recente')  return b.ts - a.ts;
+      if(currentSort === 'antigo')   return a.ts - b.ts;
+      if(currentSort === 'curtidas') return b.likes - a.likes;
+      return 0;
+    });
+
+    document.getElementById('postCount').textContent = posts.length + ' recado' + (posts.length!==1?'s':'');
+
+    if(sorted.length === 0){
+      container.innerHTML = '<div class="empty-feed"><i class="fa-regular fa-note-sticky"></i><h3>Nenhum recado encontrado</h3><p>Seja o primeiro a publicar nesta categoria!</p></div>';
+      return;
+    }
+
+    container.innerHTML = sorted.map(function(p){
+      var c   = CAT_LABEL[p.category] || CAT_LABEL.aviso;
+      var col = AUTHOR_COLORS[p.author] || '#2563eb';
+      var ini = getInitials(p.author);
+
+      /* Respostas */
+      var respHtml = '';
+      if(p.responses && p.responses.length){
+        respHtml += '<div class="responses">';
+        p.responses.forEach(function(r){
+          var rc = AUTHOR_COLORS[r.author] || '#2563eb';
+          respHtml += '<div class="response">';
+          respHtml +=   '<div class="response-avatar" style="background:'+rc+';color:#fff">'+getInitials(r.author)+'</div>';
+          respHtml +=   '<div class="response-bubble"><div class="response-author">'+escHtml(r.author)+'</div>';
+          respHtml +=   '<div class="response-text">'+escHtml(r.text)+'</div></div>';
+          respHtml += '</div>';
+        });
+        respHtml += '</div>';
+      }
+
+      return '<div class="post" id="post-'+p.id+'">'+
+        '<div class="post-stripe '+c.stripe+'"></div>'+
+        '<div class="post-body">'+
+          '<div class="post-header">'+
+            '<div class="post-author">'+
+              '<div class="post-avatar" style="background:'+col+'">'+ini+'</div>'+
+              '<div class="post-author-info">'+
+                '<div class="post-author-name">'+escHtml(p.author)+'</div>'+
+                '<div class="post-author-role">'+timeAgo(p.ts)+'</div>'+
+              '</div>'+
+            '</div>'+
+            '<div class="post-meta">'+
+              '<span class="post-category '+c.cls+'"><i class="fa-solid '+c.icon+'"></i>'+c.label+'</span>'+
+              '<span class="post-time"><i class="fa-regular fa-clock"></i>'+timeAgo(p.ts)+'</span>'+
+            '</div>'+
+          '</div>'+
+          '<div class="post-content">'+
+            (p.title ? '<div class="post-title">'+escHtml(p.title)+'</div>' : '')+
+            '<div class="post-text">'+escHtml(p.text)+'</div>'+
+            (p.image ? '<img class="post-image" src="'+p.image+'" alt="Imagem do recado">' : '')+
+          '</div>'+
+        '</div>'+
+        '<div class="post-footer">'+
+          '<div class="post-actions">'+
+            '<button class="post-action-btn'+(p.liked?' liked':'')+'" onclick="toggleLike('+p.id+')">'+
+              '<i class="fa-'+(p.liked?'solid':'regular')+' fa-heart"></i> '+p.likes+
+            '</button>'+
+            '<button class="post-action-btn'+(p.showReply?' active':'')+'" onclick="toggleReply('+p.id+')">'+
+              '<i class="fa-regular fa-comment"></i> Responder'+
+            '</button>'+
+          '</div>'+
+          '<button class="post-delete-btn" onclick="deletePost('+p.id+')" title="Remover"><i class="fa-solid fa-trash"></i></button>'+
+        '</div>'+
+        respHtml+
+        '<form class="response-form'+(p.showReply?' open':'')+'" onsubmit="submitReply(event,'+p.id+')">'+
+          '<div class="response-avatar" style="background:#2563eb;color:#fff">SP</div>'+
+          '<input type="text" placeholder="Escreva uma resposta…" required>'+
+          '<button type="submit" class="btn-reply-send"><i class="fa-solid fa-paper-plane"></i></button>'+
+        '</form>'+
+      '</div>';
+    }).join('');
+  }
+
+  /* ── Ações ───────────────────────────────────────────────── */
+  window.toggleLike = function(id){
+    var p = posts.find(function(x){return x.id===id;});
+    if(!p) return;
+    p.liked = !p.liked;
+    p.likes += p.liked ? 1 : -1;
+    render();
+  };
+
+  window.toggleReply = function(id){
+    var p = posts.find(function(x){return x.id===id;});
+    if(!p) return;
+    p.showReply = !p.showReply;
+    render();
+  };
+
+  window.submitReply = function(e, id){
+    e.preventDefault();
+    var input = e.target.querySelector('input[type="text"]');
+    var text  = input.value.trim();
+    if(!text) return;
+    var p = posts.find(function(x){return x.id===id;});
+    if(!p) return;
+    if(!p.responses) p.responses = [];
+    var author = document.getElementById('postAuthor').value;
+    p.responses.push({ author: author, text: text });
+    p.showReply = false;
+    render();
+  };
+
+  window.deletePost = function(id){
+    if(!confirm('Remover este recado?')) return;
+    posts = posts.filter(function(p){return p.id!==id;});
+    render();
+  };
+
+  window.setFilter = function(f, btn){
+    currentFilter = f;
+    document.querySelectorAll('.feed-filter-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    render();
+  };
+
+  window.setSort = function(s){ currentSort = s; render(); };
+
+  /* ── Preview de imagem ──────────────────────────────────── */
+  window.previewImg = function(input){
+    var preview = document.getElementById('imgPreview');
+    if(input.files && input.files[0]){
+      var reader = new FileReader();
+      reader.onload = function(e){ preview.src = e.target.result; preview.style.display='block'; };
+      reader.readAsDataURL(input.files[0]);
+    }
+  };
+
+  /* ── Submit do formulário (compatível com forum.js) ─────── */
+  document.getElementById('postForum').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    var text     = document.getElementById('question').value.trim();
+    var title    = document.getElementById('postTitle').value.trim();
+    var category = document.getElementById('postCategory').value;
+    var author   = document.getElementById('postAuthor').value;
+    var imgFile  = document.getElementById('imageInput').files[0];
+
+    if(!text){ alert('Por favor, escreva uma mensagem.'); return; }
+
+    var newPost = {
+      id: nextId++, ts: Date.now(),
+      author: author, title: title, text: text,
+      category: category, likes: 0, liked: false,
+      image: null, responses: [], showReply: false,
+    };
+
+    if(imgFile){
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        newPost.image = ev.target.result;
+        posts.unshift(newPost);
+        render();
+      };
+      reader.readAsDataURL(imgFile);
+    } else {
+      posts.unshift(newPost);
+      render();
+    }
+
+    /* Limpar formulário */
+    document.getElementById('question').value   = '';
+    document.getElementById('postTitle').value  = '';
+    document.getElementById('imageInput').value = '';
+    document.getElementById('imgPreview').style.display = 'none';
+  });
+
+  render();
+})();
+</script>
+
+{% endblock %}

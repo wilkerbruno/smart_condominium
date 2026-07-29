@@ -1,0 +1,242 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/escalas.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Role banner ─────────────────────────────────────────── -->
+{% if is_sindico %}
+<div class="role-banner role-banner--sindico">
+  <i class="fa-solid fa-user-tie"></i>
+  <span>Logado como <strong>Síndico</strong> — você pode visualizar e editar as escalas.</span>
+</div>
+{% elif user_cargo %}
+<div class="role-banner role-banner--funcionario">
+  <i class="fa-solid fa-id-badge"></i>
+  <span>Logado como <strong>{{ user_cargo | capitalize }}</strong> — somente visualização. Apenas o síndico pode editar.</span>
+  <a href="{{ url_for('index') }}" class="role-banner-link">Ir ao painel <i class="fa-solid fa-arrow-right"></i></a>
+</div>
+{% else %}
+<div class="role-banner role-banner--guest">
+  <i class="fa-solid fa-circle-info"></i>
+  <span>Você não está logado. Faça login para ver sua escala personalizada.</span>
+  <a href="{{ url_for('login') }}" class="role-banner-link">Fazer login <i class="fa-solid fa-arrow-right"></i></a>
+</div>
+{% endif %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-header-left">
+    <h2>Escalas de Trabalho</h2>
+    <p>{% if is_sindico %}Monte e gerencie as escalas da equipe{% else %}Consulte os turnos e horários da equipe{% endif %}</p>
+  </div>
+  <div class="header-actions">
+    <a href="{{ url_for('funcionarios') }}" class="btn-secondary">
+      <i class="fa-solid fa-arrow-left"></i> Funcionários
+    </a>
+    {% if is_sindico %}
+    <button class="btn-primary" id="btnSalvarEscala">
+      <i class="fa-solid fa-floppy-disk"></i> Salvar Escala
+    </button>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── Stats ───────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-icon si-blue"><i class="fa-solid fa-id-badge"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="statTotal">–</span>
+      <span class="stat-label">Funcionários</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-green"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="statAtivos">–</span>
+      <span class="stat-label">Trabalhando hoje</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-amber"><i class="fa-solid fa-umbrella-beach"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="statFolga">–</span>
+      <span class="stat-label">De Folga</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-purple"><i class="fa-solid fa-calendar-week"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="statSemana">–</span>
+      <span class="stat-label">Semana Atual</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Minha escala (funcionário logado, não síndico) ───────── -->
+{% if user_cargo and not is_sindico %}
+<div class="minha-escala-card" style="margin-bottom:20px">
+  <div class="minha-escala-header">
+    <h3 id="minhaEscalaNome">
+      <i class="fa-solid fa-calendar-days" style="color:var(--brand)"></i>&nbsp; Minha Semana
+    </h3>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="read-only-badge"><i class="fa-solid fa-lock"></i> Somente leitura</span>
+      <button class="btn-pdf" id="btnDownloadPdf" title="Baixar minha escala em PDF">
+        <i class="fa-solid fa-file-pdf"></i> Baixar PDF
+      </button>
+    </div>
+  </div>
+  <div class="escala-semana-list" id="minhaEscalaList"></div>
+</div>
+{% endif %}
+
+<!-- ── Card principal da escala ────────────────────────────── -->
+<div class="escala-card">
+
+  <!-- Toolbar do card: busca + navegação + ações -->
+  <div class="escala-toolbar">
+
+    <!-- Busca de funcionário -->
+    <div class="escala-search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text"
+             id="funcSearchInput"
+             placeholder="Buscar funcionário na escala…"
+             oninput="EscalaApp.filterTabela(this.value)">
+      <button class="search-clear" id="btnClearSearch" onclick="EscalaApp.clearSearch()" title="Limpar busca">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Navegação de semana -->
+    <div class="toolbar-nav">
+      <button class="month-btn" onclick="EscalaApp.prevSemana()" title="Semana anterior">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <span class="month-nav-title" id="semanaTitle">–</span>
+      <button class="month-btn" onclick="EscalaApp.nextSemana()" title="Próxima semana">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Abas de visão + ações -->
+    <div class="toolbar-actions">
+      <div class="view-tabs">
+        <button class="view-tab active" id="tabSemana" onclick="EscalaApp.setView('semana', this)">
+          <i class="fa-solid fa-table-cells"></i> Semana
+        </button>
+        <button class="view-tab" id="tabVisualizacao" onclick="EscalaApp.abrirVisualizacao()">
+          <i class="fa-solid fa-expand"></i> Visualização
+        </button>
+      </div>
+      <button class="btn-pdf" id="btnDownloadEscalaPdf" title="Baixar escala da equipe em PDF">
+        <i class="fa-solid fa-file-pdf"></i> PDF
+      </button>
+    </div>
+
+  </div><!-- /escala-toolbar -->
+
+  <!-- Resultado da busca (badge) -->
+  <div class="search-result-bar" id="searchResultBar" style="display:none">
+    <i class="fa-solid fa-filter"></i>
+    <span id="searchResultText">Mostrando resultados para "<strong></strong>"</span>
+    <button onclick="EscalaApp.clearSearch()"><i class="fa-solid fa-xmark"></i> Limpar</button>
+  </div>
+
+  <!-- Legenda + badge readonly -->
+  <div class="escala-legend">
+    <span class="legend-title">Legenda:</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#ca8a04"></span>Manhã</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#be185d"></span>Tarde</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#7c3aed"></span>Noite</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#16a34a"></span>Folga</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#0891b2"></span>Férias</span>
+    {% if is_sindico %}
+    <span class="legend-item" style="margin-left:auto;color:var(--brand);font-size:.7rem;font-weight:600">
+      <i class="fa-solid fa-pen-to-square"></i>&nbsp;Clique em qualquer turno para editar
+    </span>
+    {% else %}
+    <span class="read-only-badge" style="margin-left:auto">
+      <i class="fa-solid fa-eye"></i> Somente visualização
+    </span>
+    {% endif %}
+  </div>
+
+  <!-- Tabela -->
+  <div class="escala-table-wrap">
+    <table class="escala-table{% if not is_sindico %} readonly-table{% endif %}">
+      <thead id="escalaHead"></thead>
+      <tbody id="escalaBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Footer da tabela -->
+  <div class="escala-table-footer">
+    <span id="tableFooterInfo" style="font-size:.75rem;color:var(--text-muted)"></span>
+  </div>
+
+</div><!-- /escala-card -->
+
+
+<!-- ── Modal de edição (síndico) ───────────────────────────── -->
+{% if is_sindico %}
+<div class="modal-overlay" id="turnoModal">
+  <div class="modal-box">
+    <p class="modal-title"    id="modalTitle">Definir Turno</p>
+    <p class="modal-subtitle" id="modalSubtitle">Funcionário — Dia</p>
+    <hr class="modal-divider">
+    <div class="modal-field">
+      <label class="modal-label">Tipo de turno</label>
+      <div class="turno-options">
+        <div class="turno-opt turno-manha"  onclick="EscalaApp.selectTurno('manha')"  data-turno="manha" >☀️ Manhã</div>
+        <div class="turno-opt turno-tarde"  onclick="EscalaApp.selectTurno('tarde')"  data-turno="tarde" >🌤️ Tarde</div>
+        <div class="turno-opt turno-noite"  onclick="EscalaApp.selectTurno('noite')"  data-turno="noite" >🌙 Noite</div>
+        <div class="turno-opt turno-folga"  onclick="EscalaApp.selectTurno('folga')"  data-turno="folga" >🏖️ Folga</div>
+        <div class="turno-opt turno-ferias" onclick="EscalaApp.selectTurno('ferias')" data-turno="ferias">🌴 Férias</div>
+        <div class="turno-opt turno-vazio"  onclick="EscalaApp.selectTurno('')"       data-turno=""      >✕ Limpar</div>
+      </div>
+    </div>
+    <div class="modal-row" id="horarioFields">
+      <div class="modal-field">
+        <label class="modal-label"><i class="fa-regular fa-clock"></i> Entrada</label>
+        <input type="time" class="modal-input" id="modalEntrada" value="08:00">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label"><i class="fa-regular fa-clock"></i> Saída</label>
+        <input type="time" class="modal-input" id="modalSaida" value="17:00">
+      </div>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label"><i class="fa-regular fa-comment"></i> Observação (opcional)</label>
+      <input type="text" class="modal-input" id="modalObs" placeholder="Ex: hora extra, plantão...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="EscalaApp.closeModal()">Cancelar</button>
+      <button class="btn-primary"   onclick="EscalaApp.confirmarTurno()">
+        <i class="fa-solid fa-check"></i> Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i class="fa-solid fa-circle-check"></i>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- Config via data attributes — sem Jinja dentro de script -->
+<div id="escala-config"
+     data-is-sindico="{{ 'true' if is_sindico else 'false' }}"
+     data-user-cargo="{{ user_cargo | default('') }}"
+     data-user-nome="{{ user_nome | default('') }}"
+     style="display:none" aria-hidden="true"></div>
+
+<script src="{{ url_for('static', filename='js/escalas.js') }}"></script>
+
+{% endblock %}

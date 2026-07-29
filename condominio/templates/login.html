@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <title>Entrar — Smart Condominium</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:      #2563eb;
+      --brand-dark: #1d4ed8;
+      --brand-light:#eff6ff;
+      --text:       #0f172a;
+      --text-sec:   #475569;
+      --text-muted: #94a3b8;
+      --border:     #e2e8f0;
+      --bg:         #f1f5f9;
+      --card:       #ffffff;
+      --red:        #ef4444;
+      --radius:     14px;
+      --shadow:     0 20px 60px rgba(0,0,0,.10);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background:  var(--bg);
+      min-height:  100vh;
+      display:     flex;
+      align-items: center;
+      justify-content: center;
+      padding:     20px;
+    }
+
+    /* Fundo decorativo */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -150px; right: -150px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(37,99,235,.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -100px; left: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(16,185,129,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .login-wrap {
+      width:     100%;
+      max-width: 440px;
+      position:  relative;
+      z-index:   1;
+    }
+
+    /* ── Card ───────────────────────────────────────────────── */
+    .login-card {
+      background:    var(--card);
+      border-radius: var(--radius);
+      box-shadow:    var(--shadow);
+      overflow:      hidden;
+    }
+    .card-stripe {
+      height:     5px;
+      background: linear-gradient(90deg, var(--brand) 0%, #06b6d4 100%);
+    }
+    .card-body { padding: 40px 36px 36px; }
+
+    /* ── Brand ──────────────────────────────────────────────── */
+    .brand {
+      display:       flex;
+      align-items:   center;
+      gap:           12px;
+      margin-bottom: 32px;
+    }
+    .brand-icon {
+      width:           42px;
+      height:          42px;
+      background:      var(--brand);
+      border-radius:   11px;
+      display:         flex;
+      align-items:     center;
+      justify-content: center;
+      color:           #fff;
+      font-size:       1.1rem;
+    }
+    .brand-text   { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    .brand-text strong { color: var(--brand); }
+    .brand-sub    { font-size: .72rem; color: var(--text-muted); margin-top: 1px; }
+
+    /* ── Título ─────────────────────────────────────────────── */
+    .login-title {
+      font-size:   1.5rem;
+      font-weight: 700;
+      color:       var(--text);
+      margin-bottom: 6px;
+    }
+    .login-sub {
+      font-size:     .88rem;
+      color:         var(--text-muted);
+      margin-bottom: 28px;
+      line-height:   1.5;
+    }
+
+    /* ── Alerta de erro ─────────────────────────────────────── */
+    .alert-error {
+      display:       flex;
+      align-items:   center;
+      gap:           10px;
+      background:    #fef2f2;
+      border:        1px solid #fecaca;
+      border-radius: 9px;
+      padding:       12px 14px;
+      font-size:     .84rem;
+      color:         #991b1b;
+      font-weight:   500;
+      margin-bottom: 20px;
+    }
+    .alert-error i { font-size: .95rem; flex-shrink: 0; }
+
+    /* ── Campos ─────────────────────────────────────────────── */
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display:       block;
+      font-size:     .78rem;
+      font-weight:   600;
+      color:         var(--text-sec);
+      margin-bottom: 7px;
+    }
+    .input-wrap {
+      position:    relative;
+      display:     flex;
+      align-items: center;
+    }
+    .input-wrap .input-icon {
+      position:       absolute;
+      left:           13px;
+      color:          var(--text-muted);
+      font-size:      .85rem;
+      pointer-events: none;
+    }
+    .form-input {
+      width:         100%;
+      padding:       12px 40px 12px 38px;
+      border:        1px solid var(--border);
+      border-radius: 9px;
+      font-size:     .92rem;
+      font-family:   inherit;
+      color:         var(--text);
+      background:    #f8fafc;
+      outline:       none;
+      transition:    border-color .15s, box-shadow .15s, background .15s;
+    }
+    .form-input:focus {
+      border-color: var(--brand);
+      box-shadow:   0 0 0 3px rgba(37,99,235,.15);
+      background:   #fff;
+    }
+    .form-input.has-error {
+      border-color: var(--red);
+    }
+    .form-input.has-error:focus {
+      box-shadow: 0 0 0 3px rgba(239,68,68,.15);
+    }
+
+    /* Toggle senha */
+    .toggle-pw {
+      position:        absolute;
+      right:           12px;
+      background:      none;
+      border:          none;
+      color:           var(--text-muted);
+      cursor:          pointer;
+      font-size:       .85rem;
+      padding:         4px;
+      border-radius:   5px;
+      transition:      color .15s;
+    }
+    .toggle-pw:hover { color: var(--brand); }
+
+    /* ── Linha esqueci senha ────────────────────────────────── */
+    .forgot-row {
+      display:         flex;
+      justify-content: flex-end;
+      margin-top:      8px;
+    }
+    .forgot-link {
+      font-size:   .78rem;
+      color:       var(--brand);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+
+    /* ── Botão entrar ───────────────────────────────────────── */
+    .btn-login {
+      width:         100%;
+      padding:       14px;
+      background:    var(--brand);
+      color:         #fff;
+      border:        none;
+      border-radius: 9px;
+      font-size:     .98rem;
+      font-family:   inherit;
+      font-weight:   700;
+      cursor:        pointer;
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      gap:           8px;
+      margin-top:    24px;
+      transition:    background .15s, transform .15s, box-shadow .15s;
+    }
+    .btn-login:hover {
+      background:  var(--brand-dark);
+      transform:   translateY(-1px);
+      box-shadow:  0 6px 20px rgba(37,99,235,.30);
+    }
+    .btn-login:active { transform: translateY(0); }
+
+    /* ── Divisor ────────────────────────────────────────────── */
+    .divider {
+      display:     flex;
+      align-items: center;
+      gap:         12px;
+      margin:      24px 0;
+      color:       var(--text-muted);
+      font-size:   .75rem;
+    }
+    .divider::before, .divider::after {
+      content:    '';
+      flex:       1;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Info de acesso ─────────────────────────────────────── */
+    .access-info {
+      background:    var(--brand-light);
+      border:        1px solid #bfdbfe;
+      border-radius: 9px;
+      padding:       14px 16px;
+      font-size:     .8rem;
+      color:         #1e40af;
+      line-height:   1.6;
+    }
+    .access-info strong { color: var(--text); }
+    .access-info ul { margin-top: 6px; padding-left: 16px; }
+    .access-info li { margin-bottom: 2px; }
+
+    /* ── Rodapé do card ─────────────────────────────────────── */
+    .card-footer {
+      text-align:    center;
+      padding:       16px 36px 20px;
+      font-size:     .77rem;
+      color:         var(--text-muted);
+      border-top:    1px solid var(--border);
+      background:    #fafbfc;
+    }
+    .card-footer a { color: var(--brand); text-decoration: none; font-weight: 500; }
+    .card-footer a:hover { text-decoration: underline; }
+
+    /* ── Responsivo ─────────────────────────────────────────── */
+    @media (max-width: 480px) {
+      .card-body    { padding: 28px 20px 24px; }
+      .card-footer  { padding: 14px 20px 16px; }
+      .login-title  { font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="card-stripe"></div>
+    <div class="card-body">
+
+      <!-- Brand -->
+      <div class="brand">
+        <div class="brand-icon"><i class="fa-solid fa-building"></i></div>
+        <div>
+          <div class="brand-text">Smart<strong>Cond</strong></div>
+          <div class="brand-sub">Sistema de Gestão Condominial</div>
+        </div>
+      </div>
+
+      <!-- Título -->
+      <h1 class="login-title">Bem-vindo de volta</h1>
+      <p class="login-sub">Entre com seu usuário ou e-mail e senha para continuar.</p>
+
+      <!-- Alerta de erro -->
+      {% if request.args.get('erro') %}
+      <div class="alert-error">
+        <i class="fa-solid fa-circle-xmark"></i>
+        Usuário/e-mail ou senha incorretos. Verifique e tente novamente.
+      </div>
+      {% endif %}
+
+      <!-- Formulário -->
+      <form method="POST" action="/login" id="loginForm">
+        <input type="hidden" name="next" value="{{ request.args.get('next', '/') }}">
+
+        <!-- Usuário ou E-mail -->
+        <div class="form-group">
+          <label class="form-label" for="username">
+            <i class="fa-solid fa-user" style="margin-right:4px"></i>
+            Usuário ou E-mail
+          </label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-at input-icon"></i>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              class="form-input{% if request.args.get('erro') %} has-error{% endif %}"
+              placeholder="nome.sobrenome ou email@exemplo.com"
+              autocomplete="username"
+              autofocus
+              required
+            >
+          </div>
+        </div>
+
+        <!-- Senha -->
+        <div class="form-group">
+          <label class="form-label" for="password">
+            <i class="fa-solid fa-lock" style="margin-right:4px"></i>
+            Senha
+          </label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-key input-icon"></i>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-input{% if request.args.get('erro') %} has-error{% endif %}"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            >
+            <button type="button" class="toggle-pw" onclick="toggleSenha()" id="btnToggle">
+              <i class="fa-regular fa-eye" id="icoToggle"></i>
+            </button>
+          </div>
+          <div class="forgot-row">
+            <a href="#" class="forgot-link">Esqueci minha senha</a>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login">
+          <i class="fa-solid fa-right-to-bracket"></i> Entrar no sistema
+        </button>
+      </form>
+
+      <div class="divider">ou</div>
+
+      <!-- Dica de acesso -->
+      <div class="access-info">
+        <strong>Como acessar o sistema?</strong>
+        <ul>
+          <li>Use o <strong>usuário</strong> (ex: <code>joao.silva</code>) ou seu <strong>e-mail</strong></li>
+          <li>Funcionários e moradores recebem um <strong>link de convite</strong> por e-mail para criar a senha</li>
+          <li>Em caso de dúvidas, consulte o síndico do seu condomínio</li>
+        </ul>
+      </div>
+
+    </div>
+    <div class="card-footer">
+      <a href="/"><i class="fa-solid fa-arrow-left"></i> Voltar ao início</a>
+      &nbsp;·&nbsp;
+      <a href="/sobre">Sobre o sistema</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleSenha() {
+    var input = document.getElementById('password');
+    var ico   = document.getElementById('icoToggle');
+    if (input.type === 'password') {
+      input.type  = 'text';
+      ico.className = 'fa-regular fa-eye-slash';
+    } else {
+      input.type  = 'password';
+      ico.className = 'fa-regular fa-eye';
+    }
+  }
+</script>
+</body>
+</html>

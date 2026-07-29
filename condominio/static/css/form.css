@@ -1,0 +1,303 @@
+/* ════════════════════════════════════════════════════════════
+   form.css — Design system compartilhado para páginas de
+   cadastro. Depende das variáveis CSS de inicio.css.
+════════════════════════════════════════════════════════════ */
+
+/* ── Page header ───────────────────────────────────────────── */
+.form-page-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  margin-bottom:   28px;
+  flex-wrap:       wrap;
+  gap:             12px;
+}
+.form-page-header h2 {
+  font-size:   1.4rem;
+  font-weight: 700;
+  color:       var(--text-primary);
+}
+.form-page-header p {
+  font-size:  .78rem;
+  color:      var(--text-muted);
+  margin-top: 2px;
+}
+
+.btn-back {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             7px;
+  background:      var(--card-bg);
+  color:           var(--text-secondary);
+  border:          1px solid var(--border);
+  padding:         9px 16px;
+  border-radius:   var(--radius-sm);
+  font-size:       .82rem;
+  font-family:     var(--font-body);
+  font-weight:     500;
+  cursor:          pointer;
+  text-decoration: none;
+  transition:      var(--transition);
+}
+.btn-back:hover {
+  background: var(--page-bg);
+  color:      var(--brand);
+  border-color: var(--brand);
+}
+
+/* ── Form wrapper ──────────────────────────────────────────── */
+.form-wrapper {
+  display:               grid;
+  grid-template-columns: 280px 1fr;
+  gap:                   24px;
+  align-items:           start;
+}
+
+/* ── Sidebar de progresso ──────────────────────────────────── */
+.form-steps {
+  background:    var(--card-bg);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding:       24px;
+  box-shadow:    var(--shadow-sm);
+  position:      sticky;
+  top:           80px;
+}
+
+.form-steps-title {
+  font-size:      .68rem;
+  font-weight:    700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color:          var(--text-muted);
+  margin-bottom:  16px;
+}
+
+.step-item {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+  padding:     10px 0;
+  cursor:      pointer;
+  transition:  var(--transition);
+  position:    relative;
+}
+
+.step-item:not(:last-child)::after {
+  content:    '';
+  position:   absolute;
+  left:       15px;
+  top:        100%;
+  width:      2px;
+  height:     8px;
+  background: var(--border);
+}
+
+.step-dot {
+  width:           32px;
+  height:          32px;
+  border-radius:   50%;
+  border:          2px solid var(--border);
+  background:      var(--card-bg);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       .72rem;
+  font-weight:     700;
+  color:           var(--text-muted);
+  flex-shrink:     0;
+  transition:      var(--transition);
+}
+
+.step-info { display: flex; flex-direction: column; gap: 1px; }
+.step-label { font-size: .82rem; font-weight: 500; color: var(--text-secondary); transition: var(--transition); }
+.step-sub   { font-size: .68rem; color: var(--text-muted); }
+
+.step-item.active .step-dot {
+  background:   var(--brand);
+  border-color: var(--brand);
+  color:        #fff;
+  box-shadow:   0 0 0 4px var(--brand-glow);
+}
+.step-item.active .step-label { color: var(--brand); font-weight: 600; }
+
+.step-item.done .step-dot {
+  background:   #10b981;
+  border-color: #10b981;
+  color:        #fff;
+}
+.step-item.done .step-label  { color: #10b981; }
+.step-item:not(:last-child).done::after { background: #10b981; }
+
+/* ── Form card ─────────────────────────────────────────────── */
+.form-card {
+  background:    var(--card-bg);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:    var(--shadow-sm);
+  overflow:      hidden;
+}
+
+.form-section {
+  display: none;
+  padding: 28px;
+}
+.form-section.active { display: block; }
+
+.form-section-header {
+  display:       flex;
+  align-items:   center;
+  gap:           12px;
+  margin-bottom: 24px;
+  padding-bottom:16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-icon {
+  width:           40px;
+  height:          40px;
+  border-radius:   var(--radius-sm);
+  background:      var(--brand-light);
+  color:           var(--brand);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       1rem;
+  flex-shrink:     0;
+}
+
+.form-section-header h3 { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.form-section-header p  { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+
+/* ── Grid de campos ────────────────────────────────────────── */
+.fields-grid {
+  display:               grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:                   18px;
+}
+.fields-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.fields-grid.cols-1 { grid-template-columns: 1fr; }
+.col-span-2 { grid-column: span 2; }
+.col-span-3 { grid-column: span 3; }
+
+/* ── Campo de formulário ───────────────────────────────────── */
+.field {
+  display:        flex;
+  flex-direction: column;
+  gap:            6px;
+}
+
+.field label {
+  font-size:   .78rem;
+  font-weight: 600;
+  color:       var(--text-secondary);
+  display:     block;
+}
+
+.field label .required {
+  color:      var(--danger, #ef4444);
+  margin-left:2px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  padding:       10px 14px;
+  border:        1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size:     .875rem;
+  font-family:   var(--font-body);
+  color:         var(--text-primary);
+  background:    var(--page-bg);
+  width:         100%;
+  outline:       none;
+  transition:    var(--transition);
+  box-sizing:    border-box;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--brand);
+  background:   #fff;
+  box-shadow:   0 0 0 3px var(--brand-glow);
+}
+
+.field input.error,
+.field select.error { border-color: #ef4444; }
+
+.field textarea { resize: vertical; min-height: 90px; }
+
+.field-hint {
+  font-size:  .7rem;
+  color:      var(--text-muted);
+  margin-top: -2px;
+}
+
+/* Input com ícone prefixo */
+.field-icon-wrap { position: relative; }
+.field-icon-wrap i {
+  position:    absolute;
+  left:        12px;
+  top:         50%;
+  transform:   translateY(-50%);
+  color:       var(--text-muted);
+  font-size:   .8rem;
+  pointer-events: none;
+}
+.field-icon-wrap input { padding-left: 34px; }
+
+/* ── Form footer (navegação entre steps) ───────────────────── */
+.form-footer {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  padding:         20px 28px;
+  border-top:      1px solid var(--border);
+  background:      var(--page-bg);
+  gap:             12px;
+}
+
+.form-footer-info { font-size: .78rem; color: var(--text-muted); }
+
+.form-footer-actions { display: flex; gap: 10px; }
+
+.btn-step {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           7px;
+  padding:       10px 20px;
+  border-radius: var(--radius-sm);
+  font-size:     .85rem;
+  font-family:   var(--font-body);
+  font-weight:   600;
+  cursor:        pointer;
+  transition:    var(--transition);
+  border:        1px solid var(--border);
+  background:    var(--card-bg);
+  color:         var(--text-secondary);
+}
+.btn-step:hover       { background: var(--page-bg); color: var(--brand); border-color: var(--brand); }
+.btn-step.btn-next,
+.btn-step.btn-submit  { background: var(--brand); color: #fff; border-color: var(--brand); }
+.btn-step.btn-next:hover,
+.btn-step.btn-submit:hover { background: var(--brand-hover); }
+.btn-step.btn-submit  { background: #10b981; border-color: #10b981; }
+.btn-step.btn-submit:hover { background: #059669; }
+
+/* ── Responsivo ────────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .form-wrapper { grid-template-columns: 1fr; }
+  .form-steps   { position: static; display: flex; gap: 8px; overflow-x: auto; padding: 16px; }
+  .step-item    { flex-direction: column; text-align: center; min-width: 70px; }
+  .step-item:not(:last-child)::after { display: none; }
+  .step-sub     { display: none; }
+  .fields-grid  { grid-template-columns: repeat(2, 1fr); }
+  .col-span-3   { grid-column: span 2; }
+}
+@media (max-width: 600px) {
+  .fields-grid, .fields-grid.cols-2 { grid-template-columns: 1fr; }
+  .col-span-2, .col-span-3 { grid-column: span 1; }
+  .form-section { padding: 20px 16px; }
+  .form-footer  { padding: 16px; }
+}

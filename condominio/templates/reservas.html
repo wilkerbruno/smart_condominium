@@ -1,0 +1,256 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reservas.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-header-left">
+    <h2>Reservas</h2>
+    <p>Gerencie o agendamento das áreas comuns</p>
+  </div>
+  <a href="{{ url_for('fazer_reservas') }}" class="btn-primary">
+    <i class="fa-solid fa-plus"></i> Nova Reserva
+  </a>
+</div>
+
+<!-- ── Stats ───────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-icon si-blue"><i class="fa-solid fa-calendar-check"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="totalReservas">12</span>
+      <span class="stat-label">Total</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-green"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="confirmadas">–</span>
+      <span class="stat-label">Confirmadas</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-amber"><i class="fa-solid fa-hourglass-half"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="pendentes">–</span>
+      <span class="stat-label">Pendentes</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-purple"><i class="fa-solid fa-calendar-day"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="hoje">–</span>
+      <span class="stat-label">Hoje</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Layout: calendário + lista ──────────────────────────── -->
+<div class="reservas-layout">
+
+  <!-- Mini calendário -->
+  <div class="calendar-card">
+    <div class="calendar-header">
+      <button class="cal-nav-btn" onclick="prevMonth()"><i class="fa-solid fa-chevron-left"></i></button>
+      <h3 id="calTitle"></h3>
+      <button class="cal-nav-btn" onclick="nextMonth()"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="calendar-grid">
+      <div class="cal-weekdays">
+        <div class="cal-weekday">Dom</div><div class="cal-weekday">Seg</div>
+        <div class="cal-weekday">Ter</div><div class="cal-weekday">Qua</div>
+        <div class="cal-weekday">Qui</div><div class="cal-weekday">Sex</div>
+        <div class="cal-weekday">Sáb</div>
+      </div>
+      <div class="cal-days" id="calDays"></div>
+    </div>
+    <div class="cal-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--brand)"></div>Com reserva</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Hoje</div>
+    </div>
+  </div>
+
+  <!-- Lista de reservas -->
+  <div class="table-card">
+    <div class="table-card-toolbar">
+      <div class="table-search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" id="tableSearch" class="table-search"
+               placeholder="Buscar espaço, morador…" oninput="filterTable(this.value)">
+      </div>
+      <div class="table-filters">
+        <button class="filter-btn active" onclick="filterStatus('todos',this)">Todas</button>
+        <button class="filter-btn" onclick="filterStatus('confirmada',this)">Confirmadas</button>
+        <button class="filter-btn" onclick="filterStatus('pendente',this)">Pendentes</button>
+        <button class="filter-btn" onclick="filterStatus('cancelada',this)">Canceladas</button>
+      </div>
+    </div>
+
+    <div class="reservas-list" id="reservasList"></div>
+
+    <div class="table-pagination">
+      <span class="pagination-info" id="paginationInfo"></span>
+      <div class="pagination-btns" id="paginationBtns"></div>
+    </div>
+  </div>
+
+</div><!-- /reservas-layout -->
+
+<script>
+(function(){
+  'use strict';
+
+  var reservas = [
+    {id:1, espaco:'Área Gourmet',    icon:'🍖', unidade:'U-101', morador:'Carlos Silva',    data:'2024-03-15', hora:'14:00–18:00', mesas:5, cadeiras:20, status:'confirmada'},
+    {id:2, espaco:'Salão de Festas', icon:'🎉', unidade:'U-202', morador:'Ana Costa',       data:'2024-03-16', hora:'10:00–14:00', mesas:8, cadeiras:40, status:'confirmada'},
+    {id:3, espaco:'Piscina',         icon:'🏊', unidade:'U-301', morador:'Paulo Souza',     data:'2024-03-17', hora:'09:00–12:00', mesas:2, cadeiras:8,  status:'pendente'},
+    {id:4, espaco:'Área Gourmet',    icon:'🍖', unidade:'U-A1',  morador:'Pedro Oliveira',  data:'2024-03-18', hora:'16:00–20:00', mesas:4, cadeiras:16, status:'confirmada'},
+    {id:5, espaco:'Quadra Esportiva',icon:'⚽', unidade:'U-B1',  morador:'Ana Oliveira',    data:'2024-03-19', hora:'07:00–09:00', mesas:0, cadeiras:0,  status:'confirmada'},
+    {id:6, espaco:'Salão de Festas', icon:'🎉', unidade:'U-102', morador:'Mariana Santos',  data:'2024-03-20', hora:'18:00–23:00', mesas:10,cadeiras:60, status:'pendente'},
+    {id:7, espaco:'Academia',        icon:'🏋️', unidade:'U-201', morador:'João Oliveira',   data:'2024-03-21', hora:'06:00–07:00', mesas:0, cadeiras:0,  status:'confirmada'},
+    {id:8, espaco:'Piscina',         icon:'🏊', unidade:'U-A2',  morador:'Luciana Costa',   data:'2024-03-22', hora:'15:00–17:00', mesas:1, cadeiras:4,  status:'cancelada'},
+    {id:9, espaco:'Área Gourmet',    icon:'🍖', unidade:'U-C1',  morador:'Marta Santos',    data:'2024-03-23', hora:'12:00–16:00', mesas:6, cadeiras:24, status:'confirmada'},
+    {id:10,espaco:'Quadra Esportiva',icon:'⚽', unidade:'U-B2',  morador:'Fernando Silva',  data:'2024-03-24', hora:'08:00–10:00', mesas:0, cadeiras:0,  status:'pendente'},
+    {id:11,espaco:'Salão de Festas', icon:'🎉', unidade:'U-301', morador:'Carla Oliveira',  data:'2024-03-25', hora:'20:00–00:00', mesas:12,cadeiras:80, status:'confirmada'},
+    {id:12,espaco:'Academia',        icon:'🏋️', unidade:'U-102', morador:'Renato Silva',    data:'2024-03-26', hora:'06:00–07:00', mesas:0, cadeiras:0,  status:'confirmada'},
+  ];
+
+  var PER=6, cur=1, af='todos', sq='';
+
+  /* Dias com reservas */
+  var diasReserva = reservas.map(function(r){ return r.data.slice(8,10)*1; });
+
+  /* ── Calendário ─────────────────────────────────────────── */
+  var now = new Date(), calYear = now.getFullYear(), calMonth = now.getMonth();
+  var MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  function renderCal(){
+    document.getElementById('calTitle').textContent = MESES[calMonth] + ' ' + calYear;
+    var first = new Date(calYear, calMonth, 1).getDay();
+    var last  = new Date(calYear, calMonth+1, 0).getDate();
+    var todayD = now.getDate(), todayM = now.getMonth(), todayY = now.getFullYear();
+    var html = '';
+
+    // dias do mês anterior
+    var prevLast = new Date(calYear, calMonth, 0).getDate();
+    for(var i=first-1; i>=0; i--){
+      html += '<div class="cal-day other-month">'+(prevLast-i)+'</div>';
+    }
+    // dias do mês atual
+    for(var d=1; d<=last; d++){
+      var cls = 'cal-day';
+      if(d===todayD && calMonth===todayM && calYear===todayY) cls+=' today';
+      if(diasReserva.indexOf(d)>=0) cls+=' has-reserva';
+      html += '<div class="'+cls+'" onclick="filterDay('+d+')" title="Clique para filtrar">'+d+'</div>';
+    }
+    // dias do próximo mês
+    var rem = 42 - first - last;
+    for(var n=1; n<=rem; n++){
+      html += '<div class="cal-day other-month">'+n+'</div>';
+    }
+    document.getElementById('calDays').innerHTML = html;
+  }
+
+  window.prevMonth = function(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCal(); };
+  window.nextMonth = function(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCal(); };
+  window.filterDay = function(d){
+    var dStr = String(d).padStart(2,'0');
+    sq = dStr; cur = 1; render();
+    document.querySelectorAll('.cal-day').forEach(function(el){el.classList.remove('selected');});
+    event.target.classList.add('selected');
+  };
+
+  /* ── Lista ──────────────────────────────────────────────── */
+  function getFilt(){
+    return reservas.filter(function(r){
+      var ok = af==='todos' || r.status===af;
+      var q  = sq.toLowerCase();
+      var oq = !q ||
+        r.espaco.toLowerCase().includes(q) ||
+        r.morador.toLowerCase().includes(q) ||
+        r.unidade.toLowerCase().includes(q) ||
+        r.data.includes(q);
+      return ok && oq;
+    });
+  }
+
+  function fmtDate(d){ var p=d.split('-'); return {day:p[2],month:MESES[parseInt(p[1])-1].slice(0,3)}; }
+
+  function badgeInfo(s){
+    var m={
+      confirmada:{cls:'badge-confirmada',icon:'fa-circle-check', label:'Confirmada'},
+      pendente:  {cls:'badge-pendente',  icon:'fa-hourglass-half',label:'Pendente'},
+      cancelada: {cls:'badge-cancelada', icon:'fa-circle-xmark', label:'Cancelada'},
+    };
+    return m[s]||m.pendente;
+  }
+
+  function render(){
+    var f=getFilt(), total=f.length, pages=Math.max(1,Math.ceil(total/PER));
+    cur=Math.min(cur,pages);
+    var s=(cur-1)*PER, pg=f.slice(s,s+PER);
+    var list=document.getElementById('reservasList');
+
+    /* Stats */
+    document.getElementById('confirmadas').textContent = reservas.filter(function(r){return r.status==='confirmada';}).length;
+    document.getElementById('pendentes').textContent   = reservas.filter(function(r){return r.status==='pendente';}).length;
+    var todayStr = now.toISOString().slice(0,10);
+    document.getElementById('hoje').textContent = reservas.filter(function(r){return r.data===todayStr;}).length;
+
+    if(pg.length===0){
+      list.innerHTML='<div style="text-align:center;padding:48px;color:var(--text-muted)"><i class="fa-solid fa-calendar-xmark" style="font-size:2rem;display:block;margin-bottom:12px;opacity:.35"></i>Nenhuma reserva encontrada</div>';
+    } else {
+      list.innerHTML = pg.map(function(r){
+        var dt  = fmtDate(r.data);
+        var bi  = badgeInfo(r.status);
+        var meta = [];
+        meta.push('<span><i class="fa-solid fa-user"></i>'+r.morador+' ('+r.unidade+')</span>');
+        meta.push('<span><i class="fa-regular fa-clock"></i>'+r.hora+'</span>');
+        if(r.mesas>0) meta.push('<span><i class="fa-solid fa-table"></i>'+r.mesas+' mesas</span>');
+        if(r.cadeiras>0) meta.push('<span><i class="fa-solid fa-chair"></i>'+r.cadeiras+' cadeiras</span>');
+
+        return '<div class="reserva-item">'+
+          '<div class="reserva-date-box"><div class="date-day">'+dt.day+'</div><div class="date-month">'+dt.month+'</div></div>'+
+          '<div class="reserva-info">'+
+            '<div class="reserva-espaco"><i class="fa-solid fa-map-marker-alt"></i>'+r.espaco+'</div>'+
+            '<div class="reserva-meta">'+meta.join('')+'</div>'+
+          '</div>'+
+          '<div class="reserva-right">'+
+            '<span class="badge '+bi.cls+'"><i class="fa-solid '+bi.icon+'"></i>'+bi.label+'</span>'+
+            '<div class="row-actions">'+
+              '<button class="action-btn" title="Detalhes"><i class="fa-solid fa-eye"></i></button>'+
+              '<button class="action-btn btn-del" title="Cancelar"><i class="fa-solid fa-xmark"></i></button>'+
+            '</div>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+    }
+
+    document.getElementById('paginationInfo').innerHTML=
+      'Mostrando <strong>'+(total===0?0:s+1)+'–'+Math.min(s+PER,total)+'</strong> de <strong>'+total+'</strong>';
+    var btns='<button class="pg-btn" onclick="goPage('+(cur-1)+')" '+(cur===1?'disabled':'')+'><i class="fa-solid fa-chevron-left"></i></button>';
+    for(var p=1;p<=pages;p++) btns+='<button class="pg-btn'+(p===cur?' active':'')+'" onclick="goPage('+p+')">'+p+'</button>';
+    btns+='<button class="pg-btn" onclick="goPage('+(cur+1)+')" '+(cur===pages?'disabled':'')+'><i class="fa-solid fa-chevron-right"></i></button>';
+    document.getElementById('paginationBtns').innerHTML=btns;
+  }
+
+  window.goPage       = function(p){ var pages=Math.max(1,Math.ceil(getFilt().length/PER));if(p<1||p>pages)return;cur=p;render(); };
+  window.filterTable  = function(q){ sq=q; cur=1; render(); };
+  window.filterStatus = function(s,btn){
+    af=s; cur=1; sq='';
+    document.getElementById('tableSearch').value='';
+    document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    render();
+  };
+
+  renderCal();
+  render();
+})();
+</script>
+
+{% endblock %}

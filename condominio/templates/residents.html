@@ -1,0 +1,229 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/moradores.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-header-left">
+    <h2>Moradores</h2>
+    <p>Gerencie todos os moradores do condomínio</p>
+  </div>
+  <a href="{{ url_for('cadastro_residents') }}" class="btn-primary">
+    <i class="fa-solid fa-plus"></i> Cadastrar Morador
+  </a>
+</div>
+
+<!-- ── Stats ───────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-icon si-blue"><i class="fa-solid fa-users"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="totalMoradores">23</span>
+      <span class="stat-label">Total</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-green"><i class="fa-solid fa-house-user"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="countProp">–</span>
+      <span class="stat-label">Proprietários</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-amber"><i class="fa-solid fa-key"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="countInq">–</span>
+      <span class="stat-label">Inquilinos</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon si-pink"><i class="fa-solid fa-car"></i></div>
+    <div class="stat-info">
+      <span class="stat-value" id="countVeic">–</span>
+      <span class="stat-label">Com Veículo</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Table card ──────────────────────────────────────────── -->
+<div class="table-card">
+
+  <div class="table-card-toolbar">
+    <div class="table-search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" id="tableSearch" class="table-search"
+             placeholder="Buscar nome, CPF, unidade…" oninput="filterTable(this.value)">
+    </div>
+    <div class="table-filters">
+      <button class="filter-btn active" onclick="filterRelacao('todos', this)">Todos</button>
+      <button class="filter-btn" onclick="filterRelacao('Proprietário', this)">Proprietários</button>
+      <button class="filter-btn" onclick="filterRelacao('Inquilino', this)">Inquilinos</button>
+    </div>
+  </div>
+
+  <div style="overflow-x:auto">
+    <table class="res-table" id="resTable">
+      <thead>
+        <tr>
+          <th>Morador</th>
+          <th>Unidade</th>
+          <th>Relação</th>
+          <th>Telefone</th>
+          <th>E-mail</th>
+          <th>Veículo</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="resBody">
+        <!-- preenchido pelo JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-pagination">
+    <span class="pagination-info" id="paginationInfo"></span>
+    <div class="pagination-btns" id="paginationBtns"></div>
+  </div>
+
+</div><!-- /table-card -->
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Dados do banco (smart_condominium.morador) ─────────── */
+  var moradores = [
+    { id:1,  unidade:1,  nome:'Ana Oliveira',       doc:'123456789', tel:'(11) 9999-8888', email:'ana.oliveira@email.com',       relacao:'Proprietário', placa:'ABC-1234', modelo:'Toyota Corolla',    cor:'Prata'    },
+    { id:2,  unidade:1,  nome:'Pedro Oliveira',      doc:'987654321', tel:'(11) 8888-7777', email:'pedro.oliveira@email.com',      relacao:'Inquilino',    placa:'XYZ-9876', modelo:'Honda Civic',       cor:'Preto'    },
+    { id:3,  unidade:2,  nome:'Lucas Santos',        doc:'456789123', tel:'(11) 7777-6666', email:'lucas.santos@email.com',        relacao:'Proprietário', placa:'DEF-5678', modelo:'Volkswagen Golf',   cor:'Azul'     },
+    { id:4,  unidade:3,  nome:'Marina Costa',        doc:'654321987', tel:'(11) 6666-5555', email:'marina.costa@email.com',        relacao:'Proprietário', placa:'GHI-3456', modelo:'Ford Fiesta',       cor:'Vermelho' },
+    { id:5,  unidade:3,  nome:'Fernanda Silva',      doc:'789123456', tel:'(11) 5555-4444', email:'fernanda.silva@email.com',      relacao:'Inquilino',    placa:'JKL-9012', modelo:'Chevrolet Onix',    cor:'Branco'   },
+    { id:6,  unidade:6,  nome:'Gustavo Oliveira',    doc:'987654321', tel:'(21) 9999-8888', email:'gustavo.oliveira@email.com',    relacao:'Proprietário', placa:'MNO-2345', modelo:'Fiat Uno',          cor:'Vermelho' },
+    { id:7,  unidade:6,  nome:'Amanda Santos',       doc:'456789123', tel:'(21) 8888-7777', email:'amanda.santos@email.com',       relacao:'Inquilino',    placa:'PQR-6789', modelo:'Renault Sandero',   cor:'Prata'    },
+    { id:8,  unidade:7,  nome:'Juliana Costa',       doc:'654321987', tel:'(21) 7777-6666', email:'juliana.costa@email.com',       relacao:'Proprietário', placa:'STU-7890', modelo:'Chevrolet Prisma',  cor:'Preto'    },
+    { id:9,  unidade:8,  nome:'Rafael Silva',        doc:'789123456', tel:'(21) 6666-5555', email:'rafael.silva@email.com',        relacao:'Proprietário', placa:'VWX-1234', modelo:'Hyundai HB20',      cor:'Azul'     },
+    { id:10, unidade:8,  nome:'Camila Oliveira',     doc:'321987654', tel:'(21) 5555-4444', email:'camila.oliveira@email.com',     relacao:'Inquilino',    placa:'YZA-5678', modelo:'Volkswagen Polo',   cor:'Branco'   },
+    { id:11, unidade:9,  nome:'Fábio Santos',        doc:'987654321', tel:'(31) 9999-8888', email:'fabio.santos@email.com',        relacao:'Proprietário', placa:'BCD-3456', modelo:'Toyota Etios',      cor:'Prata'    },
+    { id:12, unidade:9,  nome:'Laura Costa',         doc:'456789123', tel:'(31) 8888-7777', email:'laura.costa@email.com',         relacao:'Proprietário', placa:'EFG-6789', modelo:'Fiat Palio',        cor:'Vermelho' },
+    { id:13, unidade:10, nome:'Gabriel Silva',       doc:'654321987', tel:'(31) 7777-6666', email:'gabriel.silva@email.com',       relacao:'Inquilino',    placa:'HIJ-7890', modelo:'Renault Duster',    cor:'Preto'    },
+    { id:14, unidade:11, nome:'Carolina Oliveira',   doc:'789123456', tel:'(31) 6666-5555', email:'carolina.oliveira@email.com',   relacao:'Proprietário', placa:'KLM-1234', modelo:'Honda Fit',         cor:'Azul'     },
+    { id:15, unidade:11, nome:'Matheus Santos',      doc:'321987654', tel:'(31) 5555-4444', email:'matheus.santos@email.com',      relacao:'Inquilino',    placa:'NOP-5678', modelo:'Chevrolet Spin',    cor:'Branco'   },
+    { id:16, unidade:12, nome:'Vanessa Costa',       doc:'987654321', tel:'(61) 9999-8888', email:'vanessa.costa@email.com',       relacao:'Proprietário', placa:'PQR-3456', modelo:'Fiat Toro',         cor:'Prata'    },
+    { id:17, unidade:12, nome:'Bruno Silva',         doc:'456789123', tel:'(61) 8888-7777', email:'bruno.silva@email.com',         relacao:'Inquilino',    placa:'STU-6789', modelo:'Volkswagen Voyage', cor:'Vermelho' },
+    { id:18, unidade:13, nome:'Fernando Oliveira',   doc:'654321987', tel:'(61) 7777-6666', email:'fernando.oliveira@email.com',   relacao:'Proprietário', placa:'VWX-7890', modelo:'Chevrolet Tracker', cor:'Preto'    },
+    { id:19, unidade:14, nome:'Aline Santos',        doc:'789123456', tel:'(61) 6666-5555', email:'aline.santos@email.com',        relacao:'Proprietário', placa:'YZA-1234', modelo:'Ford Ecosport',     cor:'Azul'     },
+    { id:20, unidade:14, nome:'Daniel Costa',        doc:'321987654', tel:'(61) 5555-4444', email:'daniel.costa@email.com',        relacao:'Inquilino',    placa:'BCD-5678', modelo:'Toyota Hilux',      cor:'Branco'   },
+    { id:21, unidade:15, nome:'Isabela Oliveira',    doc:'987654321', tel:'(41) 9999-8888', email:'isabela.oliveira@email.com',    relacao:'Proprietário', placa:'EFG-3456', modelo:'Renault Kwid',      cor:'Prata'    },
+    { id:22, unidade:15, nome:'Gustavo Santos',      doc:'456789123', tel:'(41) 8888-7777', email:'gustavo.santos@email.com',      relacao:'Inquilino',    placa:'HIJ-6789', modelo:'Fiat Siena',        cor:'Vermelho' },
+    { id:23, unidade:16, nome:'Julia Silva',         doc:'654321987', tel:'(41) 7777-6666', email:'julia.silva@email.com',         relacao:'Proprietário', placa:'KLM-7890', modelo:'Chevrolet',         cor:'Vermelho' },
+  ];
+
+  /* ── Config ─────────────────────────────────────────────── */
+  var PER_PAGE     = 8;
+  var currentPage  = 1;
+  var activeFilter = 'todos';
+  var searchQuery  = '';
+
+  /* ── Helpers ─────────────────────────────────────────────── */
+  function initials(name) {
+    var p = name.trim().split(' ');
+    return (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase();
+  }
+
+  /* ── Filtragem ───────────────────────────────────────────── */
+  function getFiltered() {
+    return moradores.filter(function (m) {
+      var okRel = activeFilter === 'todos' || m.relacao === activeFilter;
+      var q     = searchQuery.toLowerCase();
+      var okQ   = !q ||
+        m.nome.toLowerCase().includes(q) ||
+        m.doc.includes(q) ||
+        String(m.unidade).includes(q) ||
+        m.relacao.toLowerCase().includes(q) ||
+        (m.modelo && m.modelo.toLowerCase().includes(q));
+      return okRel && okQ;
+    });
+  }
+
+  /* ── Render ──────────────────────────────────────────────── */
+  function render() {
+    var filtered = getFiltered();
+    var total    = filtered.length;
+    var pages    = Math.max(1, Math.ceil(total / PER_PAGE));
+    currentPage  = Math.min(currentPage, pages);
+
+    var start = (currentPage - 1) * PER_PAGE;
+    var paged = filtered.slice(start, start + PER_PAGE);
+    var tbody = document.getElementById('resBody');
+
+    /* Stats */
+    document.getElementById('countProp').textContent = moradores.filter(function(m){ return m.relacao==='Proprietário'; }).length;
+    document.getElementById('countInq').textContent  = moradores.filter(function(m){ return m.relacao==='Inquilino';    }).length;
+    document.getElementById('countVeic').textContent = moradores.filter(function(m){ return !!m.placa; }).length;
+
+    /* Rows */
+    tbody.innerHTML = paged.length === 0
+      ? '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)"><i class="fa-solid fa-users-slash" style="font-size:1.5rem;display:block;margin-bottom:8px;opacity:.4"></i>Nenhum morador encontrado</td></tr>'
+      : paged.map(function (m) {
+          var relBadge = m.relacao === 'Proprietário'
+            ? '<span class="badge badge-prop"><i class="fa-solid fa-house"></i>' + m.relacao + '</span>'
+            : '<span class="badge badge-inq"><i class="fa-solid fa-key"></i>' + m.relacao + '</span>';
+
+          var veicCell = m.modelo
+            ? '<div class="veiculo-cell"><span class="veiculo-modelo">' + m.modelo + '</span><span class="veiculo-placa">' + m.placa + '</span></div>'
+            : '<span style="color:var(--text-muted);font-size:.78rem">—</span>';
+
+          return '<tr>' +
+            '<td><div class="morador-cell">' +
+              '<div class="morador-avatar">' + initials(m.nome) + '</div>' +
+              '<div><div class="morador-name">' + m.nome + '</div>' +
+              '<div class="morador-doc">' + m.doc + '</div></div></div></td>' +
+            '<td><span class="unit-tag">U-' + m.unidade + '</span></td>' +
+            '<td>' + relBadge + '</td>' +
+            '<td style="font-size:.8rem;color:var(--text-secondary)">' + m.tel + '</td>' +
+            '<td style="font-size:.78rem;color:var(--text-secondary)">' + m.email + '</td>' +
+            '<td>' + veicCell + '</td>' +
+            '<td><div class="row-actions">' +
+              '<button class="action-btn" title="Detalhes"><i class="fa-solid fa-eye"></i></button>' +
+              '<button class="action-btn" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>' +
+              '<button class="action-btn btn-del" title="Excluir"><i class="fa-solid fa-trash"></i></button>' +
+            '</div></td></tr>';
+        }).join('');
+
+    /* Pagination info */
+    document.getElementById('paginationInfo').innerHTML =
+      'Mostrando <strong>' + (total === 0 ? 0 : start + 1) + '–' + Math.min(start + PER_PAGE, total) + '</strong> de <strong>' + total + '</strong>';
+
+    /* Pagination buttons */
+    var btns = '';
+    btns += '<button class="pg-btn" onclick="goPage(' + (currentPage-1) + ')" ' + (currentPage===1?'disabled':'') + '><i class="fa-solid fa-chevron-left"></i></button>';
+    for (var p = 1; p <= pages; p++) {
+      btns += '<button class="pg-btn' + (p===currentPage?' active':'') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+    }
+    btns += '<button class="pg-btn" onclick="goPage(' + (currentPage+1) + ')" ' + (currentPage===pages?'disabled':'') + '><i class="fa-solid fa-chevron-right"></i></button>';
+    document.getElementById('paginationBtns').innerHTML = btns;
+  }
+
+  /* ── Globais ─────────────────────────────────────────────── */
+  window.goPage = function (p) {
+    var pages = Math.max(1, Math.ceil(getFiltered().length / PER_PAGE));
+    if (p < 1 || p > pages) return;
+    currentPage = p; render();
+  };
+  window.filterTable = function (q) { searchQuery = q; currentPage = 1; render(); };
+  window.filterRelacao = function (rel, btn) {
+    activeFilter = rel; currentPage = 1;
+    document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    render();
+  };
+
+  render();
+})();
+</script>
+
+{% endblock %}

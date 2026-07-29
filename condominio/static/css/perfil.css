@@ -1,0 +1,331 @@
+/* ════════════════════════════════════════════════════════════
+   perfil.css — Página de Perfil / Configurações do Usuário
+   Depende das variáveis CSS de inicio.css
+════════════════════════════════════════════════════════════ */
+
+/* ── Header do perfil ──────────────────────────────────────── */
+.perfil-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             16px;
+  margin-bottom:   28px;
+  flex-wrap:       wrap;
+}
+.perfil-header-left {
+  display:     flex;
+  align-items: center;
+  gap:         18px;
+}
+
+/* Avatar grande */
+.perfil-avatar-xl {
+  width:           70px;
+  height:          70px;
+  background:      var(--brand);
+  border-radius:   50%;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  color:           #fff;
+  font-size:       1.4rem;
+  font-weight:     700;
+  flex-shrink:     0;
+  letter-spacing:  .02em;
+  box-shadow:      0 4px 16px rgba(37,99,235,.25);
+}
+
+.perfil-nome {
+  font-size:   1.4rem;
+  font-weight: 700;
+  color:       var(--text-primary);
+  margin-bottom: 6px;
+}
+.perfil-meta {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  flex-wrap:   wrap;
+}
+.perfil-usuario {
+  font-size:   .82rem;
+  color:       var(--text-muted);
+  display:     flex;
+  align-items: center;
+  gap:         5px;
+  font-family: var(--font-mono, monospace);
+}
+
+/* Badges de perfil */
+.perfil-badge {
+  display:       inline-flex;
+  align-items:   center;
+  gap:           5px;
+  padding:       3px 10px;
+  border-radius: var(--radius-full);
+  font-size:     .72rem;
+  font-weight:   700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.perfil-badge--sindico     { background: #ede9fe; color: #5b21b6; }
+.perfil-badge--funcionario { background: #fef3c7; color: #92400e; }
+.perfil-badge--morador     { background: #d1fae5; color: #065f46; }
+
+/* Botão voltar */
+.btn-back-perfil {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             8px;
+  background:      var(--card-bg);
+  color:           var(--text-secondary);
+  border:          1px solid var(--border);
+  padding:         9px 18px;
+  border-radius:   var(--radius-sm);
+  font-size:       .84rem;
+  font-family:     var(--font-body);
+  font-weight:     600;
+  cursor:          pointer;
+  text-decoration: none;
+  transition:      var(--transition);
+  white-space:     nowrap;
+  flex-shrink:     0;
+}
+.btn-back-perfil:hover { background: var(--page-bg); color: var(--brand); border-color: var(--brand); }
+
+/* ── Grid de cards ─────────────────────────────────────────── */
+.perfil-grid {
+  display:               grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap:                   20px;
+  align-items:           start;
+}
+
+/* ── Card ──────────────────────────────────────────────────── */
+.perfil-card {
+  background:    var(--card-bg);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:    var(--shadow-sm);
+  overflow:      hidden;
+  transition:    var(--transition);
+}
+.perfil-card:hover { box-shadow: var(--shadow); }
+
+/* Header do card */
+.perfil-card-header {
+  display:         flex;
+  align-items:     center;
+  gap:             14px;
+  padding:         18px 20px;
+  border-bottom:   1px solid var(--border);
+}
+.perfil-card-header h3 {
+  font-size:   .95rem;
+  font-weight: 700;
+  color:       var(--text-primary);
+  margin-bottom: 2px;
+}
+.perfil-card-header p {
+  font-size: .75rem;
+  color:     var(--text-muted);
+}
+
+/* Ícone do header colorido por tipo */
+.perfil-card-icon {
+  width:           40px;
+  height:          40px;
+  border-radius:   var(--radius-sm);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       1rem;
+  flex-shrink:     0;
+}
+.perfil-card-header--func .perfil-card-icon { background: #fef3c7; color: #92400e; }
+.perfil-card-header--mora .perfil-card-icon { background: #d1fae5; color: #065f46; }
+.perfil-card-header--sec  .perfil-card-icon { background: #eff6ff; color: var(--brand); }
+
+/* Corpo do card */
+.perfil-card-body { padding: 20px; }
+
+/* ── Campos de dados ───────────────────────────────────────── */
+.perfil-fields {
+  display:        flex;
+  flex-direction: column;
+  gap:            0;
+  margin-bottom:  16px;
+}
+.perfil-field {
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+  gap:             12px;
+  padding:         11px 0;
+  border-bottom:   1px solid var(--border);
+}
+.perfil-field:last-child { border-bottom: none; }
+
+.perfil-field-label {
+  font-size:   .78rem;
+  font-weight: 600;
+  color:       var(--text-muted);
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  flex-shrink: 0;
+  min-width:   120px;
+}
+.perfil-field-label i { width: 14px; text-align: center; color: var(--brand); font-size: .72rem; }
+
+.perfil-field-value {
+  font-size:   .85rem;
+  color:       var(--text-primary);
+  font-weight: 500;
+  text-align:  right;
+  word-break:  break-all;
+}
+.perfil-field-mono {
+  font-family: var(--font-mono, monospace);
+  font-size:   .8rem;
+  color:       var(--text-secondary);
+}
+
+/* Badges dentro de campos */
+.perfil-cargo-badge {
+  display:       inline-flex;
+  align-items:   center;
+  padding:       3px 10px;
+  background:    var(--brand-light);
+  color:         var(--brand);
+  border-radius: var(--radius-full);
+  font-size:     .72rem;
+  font-weight:   700;
+}
+.perfil-unidade-tag {
+  display:       inline-flex;
+  align-items:   center;
+  padding:       4px 12px;
+  background:    #d1fae5;
+  color:         #065f46;
+  border-radius: var(--radius-full);
+  font-size:     .82rem;
+  font-weight:   700;
+}
+.perfil-status-ativo {
+  display:     inline-flex;
+  align-items: center;
+  gap:         5px;
+  color:       #10b981;
+  font-size:   .82rem;
+  font-weight: 600;
+}
+
+/* ── Bloco de veículo ──────────────────────────────────────── */
+.perfil-veiculo {
+  background:    var(--page-bg);
+  border:        1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow:      hidden;
+  margin-bottom: 16px;
+}
+.perfil-veiculo-header {
+  padding:     9px 14px;
+  font-size:   .75rem;
+  font-weight: 700;
+  color:       var(--text-secondary);
+  background:  var(--border);
+  display:     flex;
+  align-items: center;
+  gap:         7px;
+}
+.perfil-veiculo-body {
+  padding:     12px 14px;
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+  flex-wrap:   wrap;
+  font-size:   .85rem;
+  color:       var(--text-primary);
+}
+.placa-tag {
+  padding:       4px 10px;
+  background:    #1e293b;
+  color:         #fff;
+  border-radius: 5px;
+  font-size:     .78rem;
+  font-weight:   700;
+  font-family:   var(--font-mono, monospace);
+  letter-spacing:.08em;
+}
+
+/* ── Aviso de segurança ────────────────────────────────────── */
+.perfil-security-notice {
+  display:       flex;
+  align-items:   flex-start;
+  gap:           8px;
+  background:    var(--brand-light);
+  border:        1px solid #bfdbfe;
+  border-radius: var(--radius-sm);
+  padding:       12px 14px;
+  font-size:     .78rem;
+  color:         #1e40af;
+  line-height:   1.5;
+  margin-bottom: 16px;
+}
+.perfil-security-notice i { color: var(--brand); font-size: .85rem; flex-shrink: 0; margin-top: 1px; }
+
+/* ── Ações do card ─────────────────────────────────────────── */
+.perfil-actions {
+  display:   flex;
+  gap:       10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.perfil-action-btn {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             7px;
+  padding:         9px 16px;
+  border-radius:   var(--radius-sm);
+  font-size:       .82rem;
+  font-family:     var(--font-body);
+  font-weight:     600;
+  cursor:          pointer;
+  text-decoration: none;
+  border:          1px solid transparent;
+  transition:      var(--transition);
+  white-space:     nowrap;
+}
+.perfil-action-btn--brand {
+  background: var(--brand); color: #fff;
+}
+.perfil-action-btn--brand:hover { background: var(--brand-hover); transform: translateY(-1px); box-shadow: var(--shadow); }
+
+.perfil-action-btn--green {
+  background: #10b981; color: #fff;
+}
+.perfil-action-btn--green:hover { background: #059669; transform: translateY(-1px); }
+
+.perfil-action-btn--outline {
+  background: var(--card-bg); color: var(--text-secondary); border-color: var(--border);
+}
+.perfil-action-btn--outline:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-light); }
+
+.perfil-action-btn--danger {
+  background: #fef2f2; color: #dc2626; border-color: #fecaca;
+}
+.perfil-action-btn--danger:hover { background: #fee2e2; }
+
+/* ── Responsivo ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .perfil-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .perfil-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .perfil-avatar-xl { width: 56px; height: 56px; font-size: 1.1rem; }
+  .perfil-nome { font-size: 1.15rem; }
+  .perfil-field { flex-direction: column; gap: 4px; }
+  .perfil-field-value { text-align: left; }
+  .perfil-field-label { min-width: 0; }
+}

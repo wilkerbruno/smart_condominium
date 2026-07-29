@@ -1,0 +1,374 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/painel.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ══════════════════════════════════════════════════════════
+     PAINEL DE GERENCIAMENTO
+══════════════════════════════════════════════════════════ -->
+
+<!-- Saudação + data -->
+<div class="dash-header">
+  <div>
+    <h2 class="dash-title">Painel de Gerenciamento</h2>
+    <p class="dash-subtitle" id="dashDate"></p>
+  </div>
+  <div class="dash-period">
+    <button class="period-btn active" data-period="mes">Este mês</button>
+    <button class="period-btn" data-period="trim">Trimestre</button>
+    <button class="period-btn" data-period="ano">Ano</button>
+  </div>
+</div>
+
+<!-- ── KPI Cards ──────────────────────────────────────────── -->
+<div class="kpi-grid">
+
+  <div class="kpi-card kpi-blue">
+    <div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-label">Saldo em Conta</span>
+      <span class="kpi-value" id="saldo-value">R$ 10.000,00</span>
+      <span class="kpi-trend up"><i class="fa-solid fa-arrow-trend-up"></i> 8% desde o mês passado</span>
+    </div>
+  </div>
+
+  <div class="kpi-card kpi-red">
+    <div class="kpi-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-label">Contas a Pagar</span>
+      <span class="kpi-value" id="contas-pagar-value">R$ 5.000,00</span>
+      <span class="kpi-trend down"><i class="fa-solid fa-arrow-trend-down"></i> 5% desde o mês passado</span>
+    </div>
+  </div>
+
+  <div class="kpi-card kpi-cyan">
+    <div class="kpi-icon"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-label">Contas a Receber</span>
+      <span class="kpi-value" id="contas-receber-value">R$ 8.000,00</span>
+      <span class="kpi-trend up"><i class="fa-solid fa-arrow-trend-up"></i> 12% desde o mês passado</span>
+    </div>
+  </div>
+
+  <div class="kpi-card kpi-pink">
+    <div class="kpi-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+    <div class="kpi-body">
+      <span class="kpi-label">Inadimplência</span>
+      <span class="kpi-value" id="inadimplencia-value">R$ 2.000,00</span>
+      <span class="kpi-trend neutral"><i class="fa-solid fa-minus"></i> Sem alteração</span>
+    </div>
+  </div>
+
+</div><!-- /kpi-grid -->
+
+<!-- ── Gráficos (2 × 2) ───────────────────────────────────── -->
+<div class="charts-grid">
+
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <span class="chart-card-title"><i class="fa-solid fa-droplet"></i> Consumo de Água</span>
+      <div class="chart-card-actions">
+        <button class="chart-action-btn" title="Download"><i class="fa-solid fa-download"></i></button>
+        <button class="chart-action-btn" title="Expandir"><i class="fa-solid fa-expand"></i></button>
+      </div>
+    </div>
+    <div class="chart-card-body">
+      <canvas id="consumoAguaChart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <span class="chart-card-title"><i class="fa-solid fa-fire-flame-curved"></i> Consumo de Gás</span>
+      <div class="chart-card-actions">
+        <button class="chart-action-btn" title="Download"><i class="fa-solid fa-download"></i></button>
+        <button class="chart-action-btn" title="Expandir"><i class="fa-solid fa-expand"></i></button>
+      </div>
+    </div>
+    <div class="chart-card-body">
+      <canvas id="consumoGasChart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <span class="chart-card-title"><i class="fa-solid fa-chart-line"></i> Previsão de Fluxo de Caixa</span>
+      <div class="chart-card-actions">
+        <button class="chart-action-btn" title="Download"><i class="fa-solid fa-download"></i></button>
+        <button class="chart-action-btn" title="Expandir"><i class="fa-solid fa-expand"></i></button>
+      </div>
+    </div>
+    <div class="chart-card-body">
+      <canvas id="fluxoCaixaChart"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <span class="chart-card-title"><i class="fa-solid fa-chart-bar"></i> Receitas e Despesas</span>
+      <div class="chart-card-actions">
+        <button class="chart-action-btn" title="Download"><i class="fa-solid fa-download"></i></button>
+        <button class="chart-action-btn" title="Expandir"><i class="fa-solid fa-expand"></i></button>
+      </div>
+    </div>
+    <div class="chart-card-body">
+      <canvas id="receitasDespesasChart"></canvas>
+    </div>
+  </div>
+
+</div><!-- /charts-grid -->
+
+<!-- ── Atividades recentes + Acesso rápido ────────────────── -->
+<div class="dash-bottom-grid">
+
+  <!-- Atividades recentes -->
+  <div class="dash-panel">
+    <div class="dash-panel-header">
+      <span><i class="fa-solid fa-clock-rotate-left"></i> Atividades Recentes</span>
+    </div>
+    <ul class="activity-list">
+      <li class="activity-item">
+        <span class="activity-dot dot-blue"></span>
+        <div class="activity-text">
+          <p>Cobrança gerada para <strong>Unidade 202</strong></p>
+          <span class="activity-time">Hoje, 09:32</span>
+        </div>
+      </li>
+      <li class="activity-item">
+        <span class="activity-dot dot-green"></span>
+        <div class="activity-text">
+          <p>Pagamento recebido de <strong>Ana Oliveira</strong></p>
+          <span class="activity-time">Hoje, 08:14</span>
+        </div>
+      </li>
+      <li class="activity-item">
+        <span class="activity-dot dot-yellow"></span>
+        <div class="activity-text">
+          <p>Reserva de churrasqueira agendada — <strong>Unidade 301</strong></p>
+          <span class="activity-time">Ontem, 17:45</span>
+        </div>
+      </li>
+      <li class="activity-item">
+        <span class="activity-dot dot-red"></span>
+        <div class="activity-text">
+          <p>Inadimplência registrada — <strong>Unidade 105</strong></p>
+          <span class="activity-time">Ontem, 14:10</span>
+        </div>
+      </li>
+      <li class="activity-item">
+        <span class="activity-dot dot-blue"></span>
+        <div class="activity-text">
+          <p>Novo morador cadastrado: <strong>Carlos Lima</strong></p>
+          <span class="activity-time">13/03, 11:00</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Acesso rápido -->
+  <div class="dash-panel">
+    <div class="dash-panel-header">
+      <span><i class="fa-solid fa-bolt"></i> Acesso Rápido</span>
+    </div>
+    <div class="quick-access-grid">
+      <a href="{{ url_for('units') }}"       class="qa-item">
+        <i class="fa-solid fa-door-open"></i>
+        <span>Unidades</span>
+      </a>
+      <a href="{{ url_for('residents') }}"   class="qa-item">
+        <i class="fa-solid fa-users"></i>
+        <span>Moradores</span>
+      </a>
+      <a href="{{ url_for('cobranca') }}"    class="qa-item">
+        <i class="fa-solid fa-file-invoice-dollar"></i>
+        <span>Cobranças</span>
+      </a>
+      <a href="{{ url_for('funcionarios') }}" class="qa-item">
+        <i class="fa-solid fa-id-badge"></i>
+        <span>Funcionários</span>
+      </a>
+      <a href="{{ url_for('reservas') }}"    class="qa-item">
+        <i class="fa-solid fa-calendar-check"></i>
+        <span>Reservas</span>
+      </a>
+      <a href="{{ url_for('veiculo') }}"     class="qa-item">
+        <i class="fa-solid fa-car"></i>
+        <span>Veículos</span>
+      </a>
+    </div>
+  </div>
+
+</div><!-- /dash-bottom-grid -->
+
+
+<!-- Estilos em: condominio/static/css/painel.css -->
+
+<!-- ══════════════════════════════════════════════════════════
+     SCRIPTS DOS GRÁFICOS
+══════════════════════════════════════════════════════════ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* Data atual */
+  var dateEl = document.getElementById('dashDate');
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+  }
+
+  /* Period buttons */
+  document.querySelectorAll('.period-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.period-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
+  });
+
+  /* ── Configurações base dos gráficos ── */
+  Chart.defaults.font.family = "'Plus Jakarta Sans', 'Helvetica', sans-serif";
+  Chart.defaults.font.size   = 12;
+  Chart.defaults.color       = '#64748b';
+
+  var brand   = '#2563eb';
+  var red     = '#ef4444';
+  var cyan    = '#06b6d4';
+  var pink    = '#ec4899';
+  var green   = '#10b981';
+  var meses   = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
+
+  var lineOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { boxWidth: 10, padding: 16, font: { size: 11 } } },
+      tooltip: {
+        backgroundColor: '#0f172a',
+        padding: 10,
+        cornerRadius: 8,
+        titleFont: { size: 12, weight: '600' },
+        bodyFont:  { size: 11 }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 11 } } }
+    },
+    interaction: { mode: 'index', intersect: false },
+    elements: { point: { radius: 4, hoverRadius: 6 } }
+  };
+
+  /* ── Consumo de Água ── */
+  new Chart(document.getElementById('consumoAguaChart'), {
+    type: 'line',
+    data: {
+      labels: meses,
+      datasets: [{
+        label: 'Consumo (m³)',
+        data: [20, 25, 30, 28, 22, 26],
+        backgroundColor: 'rgba(37,99,235,.1)',
+        borderColor: brand,
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: brand
+      }]
+    },
+    options: lineOpts
+  });
+
+  /* ── Consumo de Gás ── */
+  new Chart(document.getElementById('consumoGasChart'), {
+    type: 'line',
+    data: {
+      labels: meses,
+      datasets: [{
+        label: 'Consumo (m³)',
+        data: [15, 18, 20, 17, 16, 19],
+        backgroundColor: 'rgba(239,68,68,.1)',
+        borderColor: red,
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: red
+      }]
+    },
+    options: lineOpts
+  });
+
+  /* ── Fluxo de Caixa ── */
+  new Chart(document.getElementById('fluxoCaixaChart'), {
+    type: 'line',
+    data: {
+      labels: meses,
+      datasets: [
+        {
+          label: 'Previsto (R$)',
+          data: [5000, 5500, 6000, 5800, 5600, 6200],
+          backgroundColor: 'rgba(6,182,212,.1)',
+          borderColor: cyan,
+          borderWidth: 2,
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: cyan
+        },
+        {
+          label: 'Realizado (R$)',
+          data: [4800, 5300, 5700, 5900, 5400, 6000],
+          backgroundColor: 'rgba(16,185,129,.08)',
+          borderColor: green,
+          borderWidth: 2,
+          tension: 0.4,
+          fill: false,
+          pointBackgroundColor: green,
+          borderDash: [5, 3]
+        }
+      ]
+    },
+    options: lineOpts
+  });
+
+  /* ── Receitas e Despesas ── */
+  new Chart(document.getElementById('receitasDespesasChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Rec. Realizadas', 'Desp. Realizadas', 'Rec. Previstas', 'Desp. Previstas'],
+      datasets: [{
+        label: 'Valor (R$)',
+        data: [5000, 4000, 6000, 4500],
+        backgroundColor: [
+          'rgba(37,99,235,.75)',
+          'rgba(239,68,68,.75)',
+          'rgba(6,182,212,.75)',
+          'rgba(236,72,153,.75)'
+        ],
+        borderColor: [brand, red, cyan, pink],
+        borderWidth: 1,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0f172a',
+          padding: 10,
+          cornerRadius: 8
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,287 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reservas.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="form-page-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+  <div>
+    <h2 style="font-size:1.4rem;font-weight:700;color:var(--text-primary)">Nova Reserva</h2>
+    <p style="font-size:.78rem;color:var(--text-muted);margin-top:2px">Agende um espaço comum do condomínio</p>
+  </div>
+  <a href="{{ url_for('reservas') }}" class="btn-secondary">
+    <i class="fa-solid fa-arrow-left"></i> Voltar
+  </a>
+</div>
+
+<!-- ── Seleção de espaços ───────────────────────────────────── -->
+<div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:24px">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+    <i class="fa-solid fa-map-pin" style="color:var(--brand)"></i>
+    <div>
+      <h3 style="font-size:.9rem;font-weight:700;color:var(--text-primary)">Selecione o Espaço</h3>
+      <p style="font-size:.72rem;color:var(--text-muted)">Clique no espaço que deseja reservar</p>
+    </div>
+  </div>
+
+  <div style="padding:20px">
+    <div class="espacos-grid" id="espacosGrid">
+
+      <div class="espaco-card" data-espaco="area_gourmet" onclick="selectEspaco(this,'Área Gourmet')">
+        <div class="espaco-selected-badge"><i class="fa-solid fa-check"></i></div>
+        <div class="espaco-banner eb-gourmet">🍖</div>
+        <div class="espaco-body">
+          <div class="espaco-name">Área Gourmet</div>
+          <div class="espaco-cap"><i class="fa-solid fa-users"></i>Capacidade: 40 pessoas</div>
+          <div class="espaco-tags">
+            <span class="espaco-tag">Churrasqueira</span>
+            <span class="espaco-tag">Mesas</span>
+            <span class="espaco-tag">Cadeiras</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="espaco-card" data-espaco="salao_festa" onclick="selectEspaco(this,'Salão de Festas')">
+        <div class="espaco-selected-badge"><i class="fa-solid fa-check"></i></div>
+        <div class="espaco-banner eb-salao">🎉</div>
+        <div class="espaco-body">
+          <div class="espaco-name">Salão de Festas</div>
+          <div class="espaco-cap"><i class="fa-solid fa-users"></i>Capacidade: 100 pessoas</div>
+          <div class="espaco-tags">
+            <span class="espaco-tag">Som</span>
+            <span class="espaco-tag">Mesas</span>
+            <span class="espaco-tag">Cadeiras</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="espaco-card" data-espaco="piscina" onclick="selectEspaco(this,'Piscina')">
+        <div class="espaco-selected-badge"><i class="fa-solid fa-check"></i></div>
+        <div class="espaco-banner eb-piscina">🏊</div>
+        <div class="espaco-body">
+          <div class="espaco-name">Piscina</div>
+          <div class="espaco-cap"><i class="fa-solid fa-users"></i>Capacidade: 30 pessoas</div>
+          <div class="espaco-tags">
+            <span class="espaco-tag">Espreguiçadeiras</span>
+            <span class="espaco-tag">Guarda-sol</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="espaco-card" data-espaco="quadra" onclick="selectEspaco(this,'Quadra Esportiva')">
+        <div class="espaco-selected-badge"><i class="fa-solid fa-check"></i></div>
+        <div class="espaco-banner eb-quadra">⚽</div>
+        <div class="espaco-body">
+          <div class="espaco-name">Quadra Esportiva</div>
+          <div class="espaco-cap"><i class="fa-solid fa-users"></i>Capacidade: 22 pessoas</div>
+          <div class="espaco-tags">
+            <span class="espaco-tag">Futebol</span>
+            <span class="espaco-tag">Basquete</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="espaco-card" data-espaco="academia" onclick="selectEspaco(this,'Academia')">
+        <div class="espaco-selected-badge"><i class="fa-solid fa-check"></i></div>
+        <div class="espaco-banner eb-academia">🏋️</div>
+        <div class="espaco-body">
+          <div class="espaco-name">Academia</div>
+          <div class="espaco-cap"><i class="fa-solid fa-users"></i>Capacidade: 10 pessoas</div>
+          <div class="espaco-tags">
+            <span class="espaco-tag">Musculação</span>
+            <span class="espaco-tag">Cardio</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Formulário de reserva ────────────────────────────────── -->
+<div class="reserva-form-card">
+  <div class="form-card-header">
+    <i class="fa-solid fa-calendar-plus"></i>
+    <h3>Dados da Reserva — <span id="espacoSelecionado">Nenhum espaço selecionado</span></h3>
+  </div>
+
+  <form id="unit-registration-form" onsubmit="confirmarReserva(event)">
+    <div class="form-body">
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Unidade <span style="color:#ef4444">*</span></label>
+          <select id="unidade_veiculo" name="unidade_veiculo" required>
+            <option value="">Selecione…</option>
+            <option>U-101 — Carlos Silva</option>
+            <option>U-102 — Mariana Santos</option>
+            <option>U-201 — João Oliveira</option>
+            <option>U-202 — Ana Costa</option>
+            <option>U-301 — Paulo Souza</option>
+            <option>U-A1 — Pedro Oliveira</option>
+            <option>U-A2 — Luciana Costa</option>
+            <option>U-B1 — Ana Oliveira</option>
+            <option>U-B2 — Fernando Silva</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Morador <span style="color:#ef4444">*</span></label>
+          <input type="text" id="morador_aluguel" name="morador_aluguel"
+                 placeholder="Nome do morador" required>
+        </div>
+      </div>
+
+      <!-- Espaço oculto (preenchido pelo JS) -->
+      <input type="hidden" id="espaco_aluguel" name="espaco_aluguel">
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Data da Reserva <span style="color:#ef4444">*</span></label>
+          <input type="date" id="data_reserva" name="data_reserva" required>
+        </div>
+        <div class="form-field">
+          <label>Horário <span style="color:#ef4444">*</span></label>
+          <select id="horario_reserva" name="horario_reserva" required>
+            <option value="">Selecione…</option>
+            <option value="06:00-09:00">06:00 – 09:00</option>
+            <option value="09:00-12:00">09:00 – 12:00</option>
+            <option value="12:00-15:00">12:00 – 15:00</option>
+            <option value="14:00-18:00">14:00 – 18:00</option>
+            <option value="16:00-20:00">16:00 – 20:00</option>
+            <option value="18:00-22:00">18:00 – 22:00</option>
+            <option value="20:00-00:00">20:00 – 00:00</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Equipamentos / itens -->
+      <div class="form-field">
+        <label>Equipamentos necessários</label>
+        <div class="equip-grid">
+
+          <div class="equip-item" id="eq-mesas" onclick="toggleEquip('mesas')">
+            <i class="fa-solid fa-table"></i>
+            <span>Mesas</span>
+            <div class="equip-qty">
+              <button type="button" onclick="adjEquip(event,'mesas',-1)">−</button>
+              <span id="qty-mesas">0</span>
+              <button type="button" onclick="adjEquip(event,'mesas',1)">+</button>
+            </div>
+          </div>
+
+          <div class="equip-item" id="eq-cadeiras" onclick="toggleEquip('cadeiras')">
+            <i class="fa-solid fa-chair"></i>
+            <span>Cadeiras</span>
+            <div class="equip-qty">
+              <button type="button" onclick="adjEquip(event,'cadeiras',-1)">−</button>
+              <span id="qty-cadeiras">0</span>
+              <button type="button" onclick="adjEquip(event,'cadeiras',1)">+</button>
+            </div>
+          </div>
+
+          <div class="equip-item" id="eq-escada" onclick="toggleEquip('escada')">
+            <i class="fa-solid fa-stairs"></i>
+            <span>Escada</span>
+            <div class="equip-qty">
+              <button type="button" onclick="adjEquip(event,'escada',-1)">−</button>
+              <span id="qty-escada">0</span>
+              <button type="button" onclick="adjEquip(event,'escada',1)">+</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Campos ocultos para manter compatibilidade com backend -->
+        <input type="hidden" id="qtd_mesas"    name="qtd_mesas">
+        <input type="hidden" id="qtd_cadeiras" name="qtd_cadeiras">
+        <input type="hidden" id="aluguel_escada" name="aluguel_escada">
+      </div>
+
+      <div class="form-field">
+        <label>Observações</label>
+        <textarea id="obs_reserva" name="obs_reserva"
+                  placeholder="Informe qualquer necessidade especial…"></textarea>
+      </div>
+
+    </div>
+
+    <div class="form-footer">
+      <button type="submit" class="btn-reservar">
+        <i class="fa-solid fa-calendar-check"></i> Confirmar Reserva
+      </button>
+      <button type="button" class="btn-limpar" onclick="limparForm()">
+        <i class="fa-solid fa-rotate-left"></i> Limpar
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function(){
+  /* Selecionar espaço */
+  window.selectEspaco = function(el, nome){
+    document.querySelectorAll('.espaco-card').forEach(function(c){ c.classList.remove('selected'); });
+    el.classList.add('selected');
+    document.getElementById('espaco_aluguel').value = el.dataset.espaco;
+    document.getElementById('espacoSelecionado').textContent = nome;
+  };
+
+  /* Equipamentos */
+  var qtys = {mesas:0, cadeiras:0, escada:0};
+
+  window.toggleEquip = function(id){
+    var el = document.getElementById('eq-'+id);
+    if(el.classList.contains('selected') && qtys[id]===0){
+      el.classList.remove('selected');
+    } else {
+      el.classList.add('selected');
+      if(qtys[id]===0){ qtys[id]=1; updateQty(id); }
+    }
+  };
+
+  window.adjEquip = function(e, id, delta){
+    e.stopPropagation();
+    qtys[id] = Math.max(0, qtys[id]+delta);
+    var el = document.getElementById('eq-'+id);
+    if(qtys[id]===0) el.classList.remove('selected');
+    else el.classList.add('selected');
+    updateQty(id);
+  };
+
+  function updateQty(id){
+    document.getElementById('qty-'+id).textContent = qtys[id];
+    if(id==='escada'){
+      document.getElementById('aluguel_escada').value = qtys[id]>0?'sim':'nao';
+    } else {
+      document.getElementById('qtd_'+id).value = qtys[id];
+    }
+  }
+
+  /* Data mínima = hoje */
+  document.getElementById('data_reserva').min = new Date().toISOString().slice(0,10);
+
+  window.confirmarReserva = function(e){
+    e.preventDefault();
+    var espaco = document.getElementById('espaco_aluguel').value;
+    if(!espaco){ alert('⚠️ Por favor, selecione um espaço antes de confirmar.'); return; }
+    alert('✅ Reserva confirmada com sucesso!');
+    limparForm();
+  };
+
+  window.limparForm = function(){
+    document.getElementById('unit-registration-form').reset();
+    document.querySelectorAll('.espaco-card').forEach(function(c){ c.classList.remove('selected'); });
+    document.getElementById('espacoSelecionado').textContent='Nenhum espaço selecionado';
+    ['mesas','cadeiras','escada'].forEach(function(id){
+      qtys[id]=0;
+      document.getElementById('qty-'+id).textContent='0';
+      document.getElementById('eq-'+id).classList.remove('selected');
+    });
+  };
+})();
+</script>
+
+{% endblock %}

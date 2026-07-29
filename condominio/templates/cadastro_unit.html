@@ -1,0 +1,258 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="form-page-header">
+  <div>
+    <h2>Cadastrar Unidade</h2>
+    <p>Registre uma nova unidade no condomínio</p>
+  </div>
+  <a href="{{ url_for('units') }}" class="btn-back">
+    <i class="fa-solid fa-arrow-left"></i> Voltar
+  </a>
+</div>
+
+<!-- ── Layout: steps + form ────────────────────────────────── -->
+<form id="unit-registration-form">
+<div class="form-wrapper">
+
+  <!-- Sidebar de steps -->
+  <div class="form-steps">
+    <p class="form-steps-title">Etapas</p>
+
+    <div class="step-item active" id="step-nav-1" onclick="goStep(1)">
+      <div class="step-dot">1</div>
+      <div class="step-info">
+        <span class="step-label">Identificação</span>
+        <span class="step-sub">Número e tipo</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-2" onclick="goStep(2)">
+      <div class="step-dot">2</div>
+      <div class="step-info">
+        <span class="step-label">Proprietário</span>
+        <span class="step-sub">Dados de contato</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-3" onclick="goStep(3)">
+      <div class="step-dot">3</div>
+      <div class="step-info">
+        <span class="step-label">Detalhes</span>
+        <span class="step-sub">Status e área</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card do formulário -->
+  <div class="form-card">
+
+    <!-- ── STEP 1: Identificação ──────────────────────────── -->
+    <div class="form-section active" id="step-1">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-door-open"></i></div>
+        <div>
+          <h3>Identificação da Unidade</h3>
+          <p>Número, tipo e localização da unidade</p>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-2">
+        <div class="field">
+          <label for="unit-number">Número / Identificador <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-hashtag"></i>
+            <input type="text" id="unit-number" name="unit-number"
+                   placeholder="Ex: 101, A1, Bl.2-201" required>
+          </div>
+          <span class="field-hint">Pode conter letras e números.</span>
+        </div>
+
+        <div class="field">
+          <label for="unit-type">Tipo de Unidade <span class="required">*</span></label>
+          <select id="unit-type" name="unit-type" required>
+            <option value="">Selecione…</option>
+            <option value="Apartamento">Apartamento</option>
+            <option value="Casa">Casa</option>
+            <option value="Cobertura">Cobertura</option>
+            <option value="Sala Comercial">Sala Comercial</option>
+            <option value="Loja">Loja</option>
+            <option value="Garagem">Garagem</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="area">Área Privativa (m²)</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-ruler-combined"></i>
+            <input type="number" id="area" name="area"
+                   placeholder="Ex: 75.50" min="1" step="0.01">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="unit-status">Status <span class="required">*</span></label>
+          <select id="unit-status" name="unit-status" required>
+            <option value="">Selecione…</option>
+            <option value="Ocupada">Ocupada</option>
+            <option value="Disponível">Disponível</option>
+            <option value="Alugado">Alugado</option>
+          </select>
+        </div>
+      </div>
+    </div><!-- /step-1 -->
+
+    <!-- ── STEP 2: Proprietário ──────────────────────────── -->
+    <div class="form-section" id="step-2">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-user-circle"></i></div>
+        <div>
+          <h3>Dados do Proprietário / Residente</h3>
+          <p>Responsável pela unidade</p>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-2">
+        <div class="field col-span-2">
+          <label for="owner-resident">Nome do Proprietário <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="owner-resident" name="owner-resident"
+                   placeholder="Nome completo" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="owner-phone">Telefone <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-phone"></i>
+            <input type="tel" id="owner-phone" name="owner-phone"
+                   placeholder="(00) 00000-0000" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="owner-email">E-mail</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="owner-email" name="owner-email"
+                   placeholder="proprietario@email.com">
+          </div>
+        </div>
+      </div>
+    </div><!-- /step-2 -->
+
+    <!-- ── STEP 3: Detalhes / Confirmação ───────────────── -->
+    <div class="form-section" id="step-3">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+          <h3>Confirmação</h3>
+          <p>Revise os dados antes de salvar</p>
+        </div>
+      </div>
+
+      <div id="reviewPanel" style="display:flex;flex-direction:column;gap:16px;">
+        <!-- preenchido pelo JS -->
+      </div>
+    </div><!-- /step-3 -->
+
+    <!-- Footer de navegação -->
+    <div class="form-footer">
+      <span class="form-footer-info" id="stepInfo">Etapa 1 de 3</span>
+      <div class="form-footer-actions">
+        <button type="button" class="btn-step btn-prev" id="btnPrev"
+                onclick="prevStep()" style="display:none">
+          <i class="fa-solid fa-arrow-left"></i> Anterior
+        </button>
+        <button type="button" class="btn-step btn-next" id="btnNext"
+                onclick="nextStep()">
+          Próximo <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button type="submit" class="btn-step btn-submit" id="btnSubmit"
+                style="display:none">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar Unidade
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /form-card -->
+</div><!-- /form-wrapper -->
+</form>
+
+<script>
+(function () {
+  var TOTAL   = 3;
+  var current = 1;
+
+  function update() {
+    for (var i = 1; i <= TOTAL; i++) {
+      var sec = document.getElementById('step-' + i);
+      var nav = document.getElementById('step-nav-' + i);
+      if (sec) sec.classList.toggle('active', i === current);
+      if (nav) {
+        nav.classList.remove('active', 'done');
+        if (i === current) nav.classList.add('active');
+        else if (i < current) nav.classList.add('done');
+      }
+    }
+    document.getElementById('btnPrev').style.display   = current > 1      ? '' : 'none';
+    document.getElementById('btnNext').style.display   = current < TOTAL  ? '' : 'none';
+    document.getElementById('btnSubmit').style.display = current === TOTAL ? '' : 'none';
+    document.getElementById('stepInfo').textContent    = 'Etapa ' + current + ' de ' + TOTAL;
+
+    if (current === TOTAL) buildReview();
+  }
+
+  /* ── Painel de revisão ───────────────────────────────── */
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? (el.value || '—') : '—';
+  }
+
+  function reviewGroup(title, icon, rows) {
+    var html = '<div style="background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">';
+    html += '<div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:var(--text-primary)">';
+    html += '<i class="fa-solid ' + icon + '" style="color:var(--brand)"></i>' + title + '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0">';
+    rows.forEach(function (r, idx) {
+      html += '<div style="padding:10px 18px;border-bottom:' + (idx < rows.length - 2 ? '1px solid var(--border)' : 'none') + '">';
+      html += '<div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:3px">' + r[0] + '</div>';
+      html += '<div style="font-size:.85rem;font-weight:500;color:var(--text-primary)">' + r[1] + '</div></div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  function buildReview() {
+    var panel = document.getElementById('reviewPanel');
+    panel.innerHTML =
+      reviewGroup('Identificação', 'fa-door-open', [
+        ['Número', val('unit-number')],
+        ['Tipo', val('unit-type')],
+        ['Status', val('unit-status')],
+        ['Área', val('area') !== '—' ? val('area') + ' m²' : '—'],
+      ]) +
+      reviewGroup('Proprietário', 'fa-user', [
+        ['Nome', val('owner-resident')],
+        ['Telefone', val('owner-phone')],
+        ['E-mail', val('owner-email')],
+        ['', ''],
+      ]);
+  }
+
+  window.goStep   = function (n) { if (n >= 1 && n <= TOTAL) { current = n; update(); } };
+  window.nextStep = function ()  { if (current < TOTAL) { current++; update(); } };
+  window.prevStep = function ()  { if (current > 1)     { current--; update(); } };
+
+  update();
+})();
+</script>
+
+{% endblock %}

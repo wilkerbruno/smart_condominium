@@ -1,0 +1,353 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/veiculos.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="form-page-header">
+  <div>
+    <h2>Cadastrar Veículo</h2>
+    <p>Registre um novo veículo vinculado a um morador</p>
+  </div>
+  <a href="{{ url_for('veiculo') }}" class="btn-back">
+    <i class="fa-solid fa-arrow-left"></i> Voltar
+  </a>
+</div>
+
+<!-- ── Wizard ──────────────────────────────────────────────── -->
+<form id="unit-registration-form">
+<div class="form-wrapper">
+
+  <!-- Sidebar de steps -->
+  <div class="form-steps">
+    <p class="form-steps-title">Etapas</p>
+
+    <div class="step-item active" id="step-nav-1" onclick="goStep(1)">
+      <div class="step-dot">1</div>
+      <div class="step-info">
+        <span class="step-label">Identificação</span>
+        <span class="step-sub">Tipo, placa e dono</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-2" onclick="goStep(2)">
+      <div class="step-dot">2</div>
+      <div class="step-info">
+        <span class="step-label">Detalhes</span>
+        <span class="step-sub">Marca, modelo e cor</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-3" onclick="goStep(3)">
+      <div class="step-dot">3</div>
+      <div class="step-info">
+        <span class="step-label">Confirmação</span>
+        <span class="step-sub">Revisar e salvar</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card do formulário -->
+  <div class="form-card">
+
+    <!-- ── STEP 1: Identificação ──────────────────────────── -->
+    <div class="form-section active" id="step-1">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-car"></i></div>
+        <div>
+          <h3>Identificação do Veículo</h3>
+          <p>Tipo, placa e proprietário</p>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-2">
+
+        <div class="field">
+          <label for="tipo_veiculo">Tipo de Veículo <span class="required">*</span></label>
+          <select id="tipo_veiculo" name="tipo_veiculo" required onchange="updateTypeIcon()">
+            <option value="">Selecione…</option>
+            <option value="carro">🚗 Carro</option>
+            <option value="moto">🏍️ Moto</option>
+            <option value="caminhao">🚚 Caminhão</option>
+            <option value="triciculo">🛺 Triciclo</option>
+            <option value="outro">🚐 Outro</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="placa_veiculo">Placa <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-hashtag"></i>
+            <input type="text" id="placa_veiculo" name="placa_veiculo"
+                   placeholder="ABC-1234" maxlength="8"
+                   style="text-transform:uppercase;font-family:var(--font-mono);letter-spacing:.08em"
+                   required>
+          </div>
+          <span class="field-hint">Formato: ABC-1234 ou ABC1D23 (Mercosul)</span>
+        </div>
+
+        <div class="field col-span-2">
+          <label for="dono_veiculo">Dono do Veículo <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="dono_veiculo" name="dono_veiculo"
+                   placeholder="Nome do proprietário" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="unidade_veiculo">Unidade <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-door-open"></i>
+            <input type="text" id="unidade_veiculo" name="unidade_veiculo"
+                   placeholder="Ex: 101, A1" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="telefone_dono">Telefone do Dono</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-phone"></i>
+            <input type="tel" id="telefone_dono" name="telefone_dono"
+                   placeholder="(00) 00000-0000">
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /step-1 -->
+
+    <!-- ── STEP 2: Detalhes ──────────────────────────────── -->
+    <div class="form-section" id="step-2">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-car-side"></i></div>
+        <div>
+          <h3>Detalhes do Veículo</h3>
+          <p>Marca, modelo, ano e cor</p>
+        </div>
+      </div>
+
+      <!-- Preview visual do veículo -->
+      <div id="vehiclePreview" style="
+        background: linear-gradient(135deg, var(--sidebar-bg) 0%, #1e3a8a 100%);
+        border-radius: var(--radius-lg);
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        color: #fff;
+      ">
+        <div id="previewIcon" style="font-size:2.5rem;opacity:.9"><i class="fa-solid fa-car"></i></div>
+        <div style="flex:1">
+          <div id="previewModelo" style="font-size:1.1rem;font-weight:700;opacity:.5">Modelo não informado</div>
+          <div style="display:flex;gap:12px;margin-top:6px;flex-wrap:wrap">
+            <span id="previewPlaca" style="background:rgba(255,255,255,.15);padding:3px 10px;border-radius:4px;font-family:var(--font-mono);font-size:.82rem;letter-spacing:.1em">– – –</span>
+            <span id="previewCor"   style="font-size:.8rem;opacity:.7;display:flex;align-items:center;gap:5px"><i class="fa-solid fa-circle" id="previewCorDot"></i>Cor não informada</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-2">
+        <div class="field">
+          <label for="marca_veiculo">Marca <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-tag"></i>
+            <input type="text" id="marca_veiculo" name="marca_veiculo"
+                   placeholder="Ex: Toyota, Honda, Ford" required
+                   oninput="updatePreview()">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="modelo_veiculo">Modelo <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-car-side"></i>
+            <input type="text" id="modelo_veiculo" name="modelo_veiculo"
+                   placeholder="Ex: Corolla, Civic, Ka" required
+                   oninput="updatePreview()">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="ano_veiculo">Ano</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-calendar"></i>
+            <input type="number" id="ano_veiculo" name="ano_veiculo"
+                   placeholder="Ex: 2022" min="1990" max="2026"
+                   oninput="updatePreview()">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="cor_veiculo">Cor <span class="required">*</span></label>
+          <select id="cor_veiculo" name="cor_veiculo" required onchange="updatePreview()">
+            <option value="">Selecione…</option>
+            <option value="Branco">Branco</option>
+            <option value="Preto">Preto</option>
+            <option value="Prata">Prata</option>
+            <option value="Cinza">Cinza</option>
+            <option value="Azul">Azul</option>
+            <option value="Vermelho">Vermelho</option>
+            <option value="Verde">Verde</option>
+            <option value="Amarelo">Amarelo</option>
+            <option value="Marrom">Marrom</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+      </div>
+    </div><!-- /step-2 -->
+
+    <!-- ── STEP 3: Confirmação ───────────────────────────── -->
+    <div class="form-section" id="step-3">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+          <h3>Confirmar Cadastro</h3>
+          <p>Revise os dados antes de salvar</p>
+        </div>
+      </div>
+      <div id="reviewPanel" style="display:flex;flex-direction:column;gap:16px;"></div>
+    </div><!-- /step-3 -->
+
+    <!-- Footer -->
+    <div class="form-footer">
+      <span class="form-footer-info" id="stepInfo">Etapa 1 de 3</span>
+      <div class="form-footer-actions">
+        <button type="button" class="btn-step btn-prev" id="btnPrev"
+                onclick="prevStep()" style="display:none">
+          <i class="fa-solid fa-arrow-left"></i> Anterior
+        </button>
+        <button type="button" class="btn-step btn-next" id="btnNext"
+                onclick="nextStep()">
+          Próximo <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button type="submit" class="btn-step btn-submit" id="btnSubmit"
+                style="display:none">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar Veículo
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /form-card -->
+</div><!-- /form-wrapper -->
+</form>
+
+<script>
+(function () {
+  var TOTAL   = 3;
+  var current = 1;
+
+  var COR_MAP = {
+    'Branco':'#f8fafc','Preto':'#1e293b','Prata':'#94a3b8','Cinza':'#6b7280',
+    'Azul':'#3b82f6','Vermelho':'#ef4444','Verde':'#10b981','Amarelo':'#f59e0b','Marrom':'#92400e'
+  };
+
+  var TIPO_ICON = { carro:'fa-car', moto:'fa-motorcycle', caminhao:'fa-truck', triciculo:'fa-bicycle', outro:'fa-van-shuttle' };
+
+  function update() {
+    for (var i = 1; i <= TOTAL; i++) {
+      var sec = document.getElementById('step-' + i);
+      var nav = document.getElementById('step-nav-' + i);
+      if (sec) sec.classList.toggle('active', i === current);
+      if (nav) {
+        nav.classList.remove('active', 'done');
+        if (i === current) nav.classList.add('active');
+        else if (i < current) nav.classList.add('done');
+      }
+    }
+    document.getElementById('btnPrev').style.display   = current > 1      ? '' : 'none';
+    document.getElementById('btnNext').style.display   = current < TOTAL  ? '' : 'none';
+    document.getElementById('btnSubmit').style.display = current === TOTAL ? '' : 'none';
+    document.getElementById('stepInfo').textContent    = 'Etapa ' + current + ' de ' + TOTAL;
+    if (current === TOTAL) buildReview();
+  }
+
+  /* Preview em tempo real */
+  window.updatePreview = function () {
+    var marca  = (document.getElementById('marca_veiculo').value  || '').trim();
+    var modelo = (document.getElementById('modelo_veiculo').value || '').trim();
+    var ano    = (document.getElementById('ano_veiculo').value    || '').trim();
+    var cor    = document.getElementById('cor_veiculo').value;
+    var placa  = (document.getElementById('placa_veiculo').value  || '– – –').toUpperCase();
+
+    var label = [marca, modelo, ano].filter(Boolean).join(' ') || 'Modelo não informado';
+    document.getElementById('previewModelo').textContent = label;
+    document.getElementById('previewModelo').style.opacity = label === 'Modelo não informado' ? '.5' : '1';
+    document.getElementById('previewPlaca').textContent = placa;
+
+    var corEl = document.getElementById('previewCor');
+    var dotEl = document.getElementById('previewCorDot');
+    if (cor && COR_MAP[cor]) {
+      corEl.textContent = '';
+      dotEl.style.color = COR_MAP[cor];
+      dotEl.style.filter = cor === 'Branco' ? 'drop-shadow(0 0 2px rgba(0,0,0,.3))' : 'none';
+      corEl.appendChild(dotEl);
+      corEl.appendChild(document.createTextNode(' ' + cor));
+    } else {
+      corEl.textContent = 'Cor não informada';
+    }
+  };
+
+  window.updateTypeIcon = function () {
+    var tipo = document.getElementById('tipo_veiculo').value;
+    var icon = TIPO_ICON[tipo] || 'fa-car';
+    document.getElementById('previewIcon').innerHTML = '<i class="fa-solid ' + icon + '"></i>';
+  };
+
+  function val(id) {
+    var el = document.getElementById(id);
+    return el && el.value ? el.value : '—';
+  }
+
+  function reviewGroup(title, icon, rows) {
+    var html = '<div style="background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">';
+    html += '<div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;color:var(--text-primary)">';
+    html += '<i class="fa-solid ' + icon + '" style="color:var(--brand)"></i>' + title + '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(2,1fr)">';
+    rows.forEach(function (r) {
+      html += '<div style="padding:10px 18px;border-bottom:1px solid var(--border)">';
+      html += '<div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:3px">' + r[0] + '</div>';
+      html += '<div style="font-size:.85rem;font-weight:500;color:var(--text-primary)">' + r[1] + '</div></div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  function buildReview() {
+    document.getElementById('reviewPanel').innerHTML =
+      reviewGroup('Identificação', 'fa-car', [
+        ['Tipo',      val('tipo_veiculo')],
+        ['Placa',     val('placa_veiculo').toUpperCase()],
+        ['Dono',      val('dono_veiculo')],
+        ['Unidade',   val('unidade_veiculo')],
+      ]) +
+      reviewGroup('Detalhes', 'fa-car-side', [
+        ['Marca',     val('marca_veiculo')],
+        ['Modelo',    val('modelo_veiculo')],
+        ['Ano',       val('ano_veiculo')],
+        ['Cor',       val('cor_veiculo')],
+      ]);
+  }
+
+  /* Placa uppercase automático */
+  var placaEl = document.getElementById('placa_veiculo');
+  if (placaEl) {
+    placaEl.addEventListener('input', function () {
+      this.value = this.value.toUpperCase();
+      updatePreview();
+    });
+  }
+
+  window.goStep   = function (n) { if (n>=1&&n<=TOTAL){current=n;update();} };
+  window.nextStep = function ()  { if (current<TOTAL){current++;update();} };
+  window.prevStep = function ()  { if (current>1)    {current--;update();} };
+
+  update();
+})();
+</script>
+
+{% endblock %}

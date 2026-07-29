@@ -1,0 +1,368 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+<style>
+  .convite-wrap {
+    max-width:  640px;
+    margin:     0 auto;
+  }
+
+  /* ── Card principal ──────────────────────────────────────── */
+  .convite-card {
+    background:    var(--card-bg);
+    border:        1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow:    var(--shadow);
+    overflow:      hidden;
+  }
+  .convite-card-stripe {
+    height:     5px;
+    background: linear-gradient(90deg, var(--brand) 0%, #06b6d4 100%);
+  }
+  .convite-card-body { padding: 40px; }
+
+  /* ── Ícone de sucesso ────────────────────────────────────── */
+  .success-icon-wrap {
+    width:           72px;
+    height:          72px;
+    background:      #f0fdf4;
+    border-radius:   50%;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    font-size:       1.8rem;
+    color:           #10b981;
+    margin:          0 auto 24px;
+    border:          2px solid #bbf7d0;
+  }
+
+  .convite-title {
+    font-size:   1.4rem;
+    font-weight: 700;
+    color:       var(--text-primary);
+    text-align:  center;
+    margin-bottom: 6px;
+  }
+  .convite-subtitle {
+    font-size:   .88rem;
+    color:       var(--text-muted);
+    text-align:  center;
+    margin-bottom: 32px;
+  }
+
+  /* ── Info da pessoa cadastrada ───────────────────────────── */
+  .pessoa-box {
+    display:       flex;
+    align-items:   center;
+    gap:           14px;
+    background:    var(--page-bg);
+    border:        1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding:       16px 20px;
+    margin-bottom: 28px;
+  }
+  .pessoa-avatar {
+    width:           46px;
+    height:          46px;
+    background:      var(--brand);
+    border-radius:   50%;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    font-size:       1.1rem;
+    color:           #fff;
+    flex-shrink:     0;
+  }
+  .pessoa-info { flex: 1; }
+  .pessoa-nome  { font-size: .95rem; font-weight: 700; color: var(--text-primary); }
+  .pessoa-email { font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
+  .pessoa-badge {
+    display:       inline-flex;
+    align-items:   center;
+    gap:           5px;
+    background:    #eff6ff;
+    color:         var(--brand);
+    border:        1px solid #bfdbfe;
+    border-radius: var(--radius-full);
+    padding:       3px 10px;
+    font-size:     .72rem;
+    font-weight:   700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  /* ── Seção do link ───────────────────────────────────────── */
+  .link-section {
+    background:    #fffbeb;
+    border:        1px solid #fde68a;
+    border-radius: var(--radius-sm);
+    padding:       20px;
+    margin-bottom: 28px;
+  }
+  .link-section-title {
+    font-size:   .78rem;
+    font-weight: 700;
+    color:       #92400e;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 10px;
+    display:     flex;
+    align-items: center;
+    gap:         6px;
+  }
+  .link-description {
+    font-size:   .83rem;
+    color:       #78350f;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  /* Caixa copiável do link */
+  .link-copy-wrap {
+    display:     flex;
+    align-items: center;
+    gap:         8px;
+  }
+  .link-input {
+    flex:          1;
+    padding:       9px 12px;
+    border:        1px solid #fcd34d;
+    border-radius: var(--radius-sm);
+    font-size:     .75rem;
+    font-family:   var(--font-mono, monospace);
+    background:    #fff;
+    color:         var(--text-primary);
+    word-break:    break-all;
+    outline:       none;
+  }
+  .btn-copy {
+    display:         flex;
+    align-items:     center;
+    gap:             6px;
+    padding:         9px 16px;
+    background:      #f59e0b;
+    color:           #fff;
+    border:          none;
+    border-radius:   var(--radius-sm);
+    font-size:       .8rem;
+    font-family:     var(--font-body);
+    font-weight:     600;
+    cursor:          pointer;
+    white-space:     nowrap;
+    transition:      var(--transition, all .15s);
+    flex-shrink:     0;
+  }
+  .btn-copy:hover { background: #d97706; transform: translateY(-1px); }
+  .btn-copy.copied { background: #10b981; }
+
+  /* ── Aviso de prazo ──────────────────────────────────────── */
+  .prazo-notice {
+    display:     flex;
+    align-items: center;
+    gap:         8px;
+    font-size:   .78rem;
+    color:       var(--text-muted);
+    margin-top:  12px;
+  }
+  .prazo-notice i { color: #f59e0b; }
+
+  /* ── Próximos passos ─────────────────────────────────────── */
+  .steps-list {
+    display:        flex;
+    flex-direction: column;
+    gap:            12px;
+    margin-bottom:  28px;
+  }
+  .step-item {
+    display:     flex;
+    align-items: flex-start;
+    gap:         12px;
+  }
+  .step-num {
+    width:           26px;
+    height:          26px;
+    background:      var(--brand);
+    color:           #fff;
+    border-radius:   50%;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    font-size:       .72rem;
+    font-weight:     700;
+    flex-shrink:     0;
+    margin-top:      1px;
+  }
+  .step-text { font-size: .84rem; color: var(--text-secondary); line-height: 1.5; }
+  .step-text strong { color: var(--text-primary); }
+
+  /* ── Ações ───────────────────────────────────────────────── */
+  .convite-actions {
+    display:   flex;
+    gap:       12px;
+    flex-wrap: wrap;
+  }
+  .btn-primary {
+    display:         inline-flex;
+    align-items:     center;
+    gap:             8px;
+    background:      var(--brand);
+    color:           #fff;
+    border:          none;
+    padding:         11px 22px;
+    border-radius:   var(--radius-sm);
+    font-size:       .88rem;
+    font-family:     var(--font-body);
+    font-weight:     600;
+    cursor:          pointer;
+    text-decoration: none;
+    transition:      var(--transition, all .15s);
+  }
+  .btn-primary:hover { background: var(--brand-hover, #1d4ed8); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn-secondary {
+    display:         inline-flex;
+    align-items:     center;
+    gap:             8px;
+    background:      var(--card-bg);
+    color:           var(--text-secondary);
+    border:          1px solid var(--border);
+    padding:         11px 22px;
+    border-radius:   var(--radius-sm);
+    font-size:       .88rem;
+    font-family:     var(--font-body);
+    font-weight:     600;
+    cursor:          pointer;
+    text-decoration: none;
+    transition:      var(--transition, all .15s);
+  }
+  .btn-secondary:hover { color: var(--brand); border-color: var(--brand); }
+
+  /* ── Reenviado banner ────────────────────────────────────── */
+  .reenviado-banner {
+    display:       flex;
+    align-items:   center;
+    gap:           10px;
+    background:    #eff6ff;
+    border:        1px solid #bfdbfe;
+    border-radius: var(--radius-sm);
+    padding:       12px 16px;
+    margin-bottom: 20px;
+    font-size:     .83rem;
+    color:         #1e40af;
+    font-weight:   500;
+  }
+</style>
+{% endblock %}
+
+{% block conteudo_body %}
+<div class="convite-wrap">
+
+  {% if reenviado %}
+  <div class="reenviado-banner">
+    <i class="fa-solid fa-rotate"></i>
+    Convite reenviado com um novo link de confirmação.
+  </div>
+  {% endif %}
+
+  <div class="convite-card">
+    <div class="convite-card-stripe"></div>
+    <div class="convite-card-body">
+
+      <!-- Ícone de sucesso -->
+      <div class="success-icon-wrap">
+        <i class="fa-solid fa-paper-plane"></i>
+      </div>
+
+      <h2 class="convite-title">
+        {{ 'Convite Reenviado!' if reenviado else tipo | capitalize + ' cadastrado com sucesso!' }}
+      </h2>
+      <p class="convite-subtitle">
+        Um link de confirmação foi gerado para <strong>{{ nome }}</strong> ativar a conta e criar uma senha.
+      </p>
+
+      <!-- Dados da pessoa cadastrada -->
+      <div class="pessoa-box">
+        <div class="pessoa-avatar"><i class="fa-solid fa-user"></i></div>
+        <div class="pessoa-info">
+          <div class="pessoa-nome">{{ nome }}</div>
+          <div class="pessoa-email">{{ email }}</div>
+        </div>
+        <span class="pessoa-badge">
+          <i class="fa-solid fa-{{ 'id-badge' if tipo == 'funcionário' else 'house-user' }}"></i>
+          {{ tipo | capitalize }}
+        </span>
+      </div>
+
+      <!-- Link de confirmação -->
+      <div class="link-section">
+        <div class="link-section-title">
+          <i class="fa-solid fa-link"></i> Link de Confirmação
+        </div>
+        <p class="link-description">
+          Envie este link para <strong>{{ nome }}</strong>. Ao clicar, ele(a) poderá confirmar o e-mail
+          e definir uma senha para acessar o sistema.
+        </p>
+        <div class="link-copy-wrap">
+          <input type="text" class="link-input" id="linkConfirmacao" value="{{ link }}" readonly onclick="this.select()">
+          <button class="btn-copy" id="btnCopiar" onclick="copiarLink()">
+            <i class="fa-regular fa-copy"></i> Copiar
+          </button>
+        </div>
+        <div class="prazo-notice">
+          <i class="fa-solid fa-clock"></i>
+          Este link expira em <strong>7 dias</strong>. Após esse prazo, será necessário reenviar o convite.
+        </div>
+      </div>
+
+      <!-- Próximos passos -->
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Envie o link</strong> para {{ nome }} via WhatsApp, e-mail ou outro meio de comunicação.
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            {{ nome }} acessa o link e <strong>cria uma senha</strong> para entrar no sistema.
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            A conta é <strong>ativada automaticamente</strong> após a confirmação. O login fica disponível imediatamente.
+          </div>
+        </div>
+      </div>
+
+      <!-- Ações -->
+      <div class="convite-actions">
+        <a href="{{ voltar_url }}" class="btn-primary">
+          <i class="fa-solid fa-arrow-left"></i> {{ voltar_label }}
+        </a>
+        <a href="{{ link }}" target="_blank" class="btn-secondary">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir link (teste)
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function copiarLink() {
+    var input = document.getElementById('linkConfirmacao');
+    var btn   = document.getElementById('btnCopiar');
+    input.select();
+    document.execCommand('copy');
+    btn.classList.add('copied');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copiado!';
+    setTimeout(function() {
+      btn.classList.remove('copied');
+      btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copiar';
+    }, 2500);
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,297 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/condominio.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="cond-header">
+  <div>
+    <h2 class="cond-title">Condomínios</h2>
+    <p class="cond-subtitle">Gerencie e selecione o condomínio ativo</p>
+  </div>
+  <a href="{{ url_for('cadastro_condominio') }}" class="btn-primary">
+    <i class="fa-solid fa-plus"></i> Cadastrar Condomínio
+  </a>
+</div>
+
+<!-- ── Stats ───────────────────────────────────────────────── -->
+<div class="cond-stats">
+  <div class="stat-card">
+    <div class="stat-icon blue"><i class="fa-solid fa-city"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">5</span>
+      <span class="stat-label">Total</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">5</span>
+      <span class="stat-label">Ativos</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon amber"><i class="fa-solid fa-door-open"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">25</span>
+      <span class="stat-label">Unidades</span>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon red"><i class="fa-solid fa-users"></i></div>
+    <div class="stat-info">
+      <span class="stat-value">23</span>
+      <span class="stat-label">Moradores</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toolbar ─────────────────────────────────────────────── -->
+<div class="cond-toolbar">
+  <div class="cond-search-wrap">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="search" id="condSearch" class="cond-search"
+           placeholder="Buscar condomínio..." oninput="filterCards(this.value)">
+  </div>
+  <div class="view-toggle">
+    <button class="view-btn active" id="btnGrid" title="Grade" onclick="setView('grid')">
+      <i class="fa-solid fa-grid-2"></i>
+    </button>
+    <button class="view-btn" id="btnList" title="Lista" onclick="setView('list')">
+      <i class="fa-solid fa-list"></i>
+    </button>
+  </div>
+</div>
+
+<!-- ── Grid de condomínios ─────────────────────────────────── -->
+<div class="cond-grid" id="condGrid">
+
+  <!-- Card 1 -->
+  <div class="cond-card" data-name="residencial primavera">
+    <div class="cond-card-banner"></div>
+    <div class="cond-card-body">
+      <div class="cond-card-top">
+        <div class="cond-avatar"><i class="fa-solid fa-building"></i></div>
+        <span class="cond-badge badge-ativo"><i class="fa-solid fa-circle" style="font-size:.5rem"></i> Ativo</span>
+      </div>
+      <h3 class="cond-name">Residencial Primavera</h3>
+      <p class="cond-address"><i class="fa-solid fa-location-dot"></i> Rua das Flores, 100 — São Paulo, SP</p>
+      <div class="cond-card-details">
+        <div class="cond-detail">
+          <span class="cond-detail-label">Síndico</span>
+          <span class="cond-detail-value">Carlos Silva</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">Celular</span>
+          <span class="cond-detail-value">(11) 9876-5432</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">CEP</span>
+          <span class="cond-detail-value">01234-567</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">E-mail</span>
+          <span class="cond-detail-value" style="font-size:.72rem">contato@residencialprimavera.com</span>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card-footer">
+      <a href="{{ url_for('index') }}" class="btn-card-action">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> Acessar
+      </a>
+      <button class="btn-card-action btn-danger">
+        <i class="fa-solid fa-pen-to-square"></i> Editar
+      </button>
+    </div>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="cond-card" data-name="parque das flores">
+    <div class="cond-card-banner green"></div>
+    <div class="cond-card-body">
+      <div class="cond-card-top">
+        <div class="cond-avatar green"><i class="fa-solid fa-tree-city"></i></div>
+        <span class="cond-badge badge-ativo"><i class="fa-solid fa-circle" style="font-size:.5rem"></i> Ativo</span>
+      </div>
+      <h3 class="cond-name">Parque das Flores</h3>
+      <p class="cond-address"><i class="fa-solid fa-location-dot"></i> Av. dos Girassóis, 200 — Rio de Janeiro, RJ</p>
+      <div class="cond-card-details">
+        <div class="cond-detail">
+          <span class="cond-detail-label">Síndico</span>
+          <span class="cond-detail-value">Ana Santos</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">Celular</span>
+          <span class="cond-detail-value">(21) 9876-5432</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">CEP</span>
+          <span class="cond-detail-value">20000-123</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">E-mail</span>
+          <span class="cond-detail-value" style="font-size:.72rem">contato@parquedasflores.com</span>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card-footer">
+      <a href="{{ url_for('index') }}" class="btn-card-action">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> Acessar
+      </a>
+      <button class="btn-card-action btn-danger">
+        <i class="fa-solid fa-pen-to-square"></i> Editar
+      </button>
+    </div>
+  </div>
+
+  <!-- Card 3 -->
+  <div class="cond-card" data-name="vista bela">
+    <div class="cond-card-banner amber"></div>
+    <div class="cond-card-body">
+      <div class="cond-card-top">
+        <div class="cond-avatar amber"><i class="fa-solid fa-mountain-sun"></i></div>
+        <span class="cond-badge badge-ativo"><i class="fa-solid fa-circle" style="font-size:.5rem"></i> Ativo</span>
+      </div>
+      <h3 class="cond-name">Vista Bela</h3>
+      <p class="cond-address"><i class="fa-solid fa-location-dot"></i> Rua das Palmeiras, 300 — Belo Horizonte, MG</p>
+      <div class="cond-card-details">
+        <div class="cond-detail">
+          <span class="cond-detail-label">Síndico</span>
+          <span class="cond-detail-value">João Oliveira</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">Celular</span>
+          <span class="cond-detail-value">(31) 8765-4321</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">CEP</span>
+          <span class="cond-detail-value">30000-456</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">E-mail</span>
+          <span class="cond-detail-value" style="font-size:.72rem">contato@vistabela.com</span>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card-footer">
+      <a href="{{ url_for('index') }}" class="btn-card-action">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> Acessar
+      </a>
+      <button class="btn-card-action btn-danger">
+        <i class="fa-solid fa-pen-to-square"></i> Editar
+      </button>
+    </div>
+  </div>
+
+  <!-- Card 4 -->
+  <div class="cond-card" data-name="sol nascente">
+    <div class="cond-card-banner purple"></div>
+    <div class="cond-card-body">
+      <div class="cond-card-top">
+        <div class="cond-avatar purple"><i class="fa-solid fa-sun"></i></div>
+        <span class="cond-badge badge-ativo"><i class="fa-solid fa-circle" style="font-size:.5rem"></i> Ativo</span>
+      </div>
+      <h3 class="cond-name">Sol Nascente</h3>
+      <p class="cond-address"><i class="fa-solid fa-location-dot"></i> Av. do Sol, 400 — Brasília, DF</p>
+      <div class="cond-card-details">
+        <div class="cond-detail">
+          <span class="cond-detail-label">Síndico</span>
+          <span class="cond-detail-value">Maria Silva</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">Celular</span>
+          <span class="cond-detail-value">(61) 9876-5432</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">CEP</span>
+          <span class="cond-detail-value">70000-789</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">E-mail</span>
+          <span class="cond-detail-value" style="font-size:.72rem">contato@solascente.com</span>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card-footer">
+      <a href="{{ url_for('index') }}" class="btn-card-action">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> Acessar
+      </a>
+      <button class="btn-card-action btn-danger">
+        <i class="fa-solid fa-pen-to-square"></i> Editar
+      </button>
+    </div>
+  </div>
+
+  <!-- Card 5 -->
+  <div class="cond-card" data-name="jardim das flores">
+    <div class="cond-card-banner teal"></div>
+    <div class="cond-card-body">
+      <div class="cond-card-top">
+        <div class="cond-avatar teal"><i class="fa-solid fa-seedling"></i></div>
+        <span class="cond-badge badge-ativo"><i class="fa-solid fa-circle" style="font-size:.5rem"></i> Ativo</span>
+      </div>
+      <h3 class="cond-name">Jardim das Flores</h3>
+      <p class="cond-address"><i class="fa-solid fa-location-dot"></i> Alameda das Tulipas, 500 — Curitiba, PR</p>
+      <div class="cond-card-details">
+        <div class="cond-detail">
+          <span class="cond-detail-label">Síndico</span>
+          <span class="cond-detail-value">Pedro Oliveira</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">Celular</span>
+          <span class="cond-detail-value">(41) 9876-5432</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">CEP</span>
+          <span class="cond-detail-value">80000-901</span>
+        </div>
+        <div class="cond-detail">
+          <span class="cond-detail-label">E-mail</span>
+          <span class="cond-detail-value" style="font-size:.72rem">contato@jardimdasflores.com</span>
+        </div>
+      </div>
+    </div>
+    <div class="cond-card-footer">
+      <a href="{{ url_for('index') }}" class="btn-card-action">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> Acessar
+      </a>
+      <button class="btn-card-action btn-danger">
+        <i class="fa-solid fa-pen-to-square"></i> Editar
+      </button>
+    </div>
+  </div>
+
+</div><!-- /cond-grid -->
+
+<script>
+  /* ── Filtro de busca ─────────────────────────────────────── */
+  function filterCards(query) {
+    var q = query.toLowerCase();
+    document.querySelectorAll('.cond-card').forEach(function (card) {
+      var name = card.getAttribute('data-name') || '';
+      card.style.display = name.includes(q) ? '' : 'none';
+    });
+  }
+
+  /* ── Toggle grade / lista ────────────────────────────────── */
+  function setView(mode) {
+    var grid = document.getElementById('condGrid');
+    var btnGrid = document.getElementById('btnGrid');
+    var btnList = document.getElementById('btnList');
+
+    if (mode === 'list') {
+      grid.style.gridTemplateColumns = '1fr';
+      btnList.classList.add('active');
+      btnGrid.classList.remove('active');
+    } else {
+      grid.style.gridTemplateColumns = '';
+      btnGrid.classList.add('active');
+      btnList.classList.remove('active');
+    }
+  }
+</script>
+
+{% endblock %}

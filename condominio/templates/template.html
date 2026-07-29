@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/inicio.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/cadastros.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/forum.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>{{ titulo }}</title>
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+  <!-- Overlay mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SIDEBAR — clique na brand para colapsar/expandir
+  ══════════════════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-brand" id="sidebarToggle" role="button" title="Recolher menu">
+      <div class="brand-icon">
+        <i class="fa-solid fa-building"></i>
+      </div>
+      <span class="brand-name">Smart<strong>Cond</strong></span>
+      <i class="fa-solid fa-chevron-left brand-arrow" id="brandArrow"></i>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+        <li><a href="{{ url_for('index') }}"        class="nav-link" data-tooltip="Painel">       <i class="fa-solid fa-gauge-high"></i>          <span>Painel</span>       </a></li>
+        <li><a href="{{ url_for('condominio') }}"   class="nav-link" data-tooltip="Condomínio">   <i class="fa-solid fa-city"></i>                <span>Condomínio</span>   </a></li>
+        <li><a href="{{ url_for('units') }}"        class="nav-link" data-tooltip="Unidades">     <i class="fa-solid fa-door-open"></i>           <span>Unidades</span>     </a></li>
+        <li><a href="{{ url_for('residents') }}"    class="nav-link" data-tooltip="Moradores">    <i class="fa-solid fa-users"></i>               <span>Moradores</span>    </a></li>
+        <li><a href="{{ url_for('funcionarios') }}" class="nav-link" data-tooltip="Funcionários"> <i class="fa-solid fa-id-badge"></i>            <span>Funcionários</span> </a></li>
+        <li><a href="{{ url_for('veiculo') }}"      class="nav-link" data-tooltip="Veículos">     <i class="fa-solid fa-car"></i>                 <span>Veículos</span>     </a></li>
+        <li><a href="{{ url_for('cobranca') }}"     class="nav-link" data-tooltip="Cobranças">    <i class="fa-solid fa-file-invoice-dollar"></i> <span>Cobranças</span>    </a></li>
+        <li><a href="{{ url_for('reservas') }}"     class="nav-link" data-tooltip="Reservas">     <i class="fa-solid fa-calendar-check"></i>      <span>Reservas</span>     </a></li>
+        <li><a href="{{ url_for('chat') }}"         class="nav-link" data-tooltip="Chat">         <i class="fa-solid fa-comments"></i>            <span>Chat</span>         </a></li>
+        <li><a href="{{ url_for('recados') }}"      class="nav-link" data-tooltip="Recados">      <i class="fa-solid fa-thumbtack"></i>           <span>Recados</span>      </a></li>
+        <li><a href="{{ url_for('sobre') }}"        class="nav-link" data-tooltip="Sobre">        <i class="fa-solid fa-circle-info"></i>         <span>Sobre</span>        </a></li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="{{ url_for('logout') }}" class="nav-link logout-link" data-tooltip="Sair">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Sair</span>
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════
+       MAIN WRAPPER
+  ══════════════════════════════════════════════════════════ -->
+  <div class="main-wrapper" id="mainWrapper">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menu"><i class="fa-solid fa-bars"></i></button>
+        <h1 class="page-title">{{ titulo }}</h1>
+      </div>
+
+      <div class="topbar-right">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="search" id="search-input" name="search-input"
+                 placeholder="Pesquisar..." class="topbar-search" autocomplete="off">
+        </div>
+
+        <!-- Avatar / dropdown de perfil + login -->
+        <div class="user-menu" id="userMenu">
+          <div class="user-avatar" id="userAvatarBtn" title="Perfil / Login">
+            <i class="fa-solid fa-user"></i>
+          </div>
+
+          <div class="user-dropdown" id="userDropdown">
+
+            {# ══════════════════════════════════════════════════
+               LOGADO — mostra perfil conforme o cargo
+            ══════════════════════════════════════════════════ #}
+            {% if session.get('user_id') %}
+
+              {# Cabeçalho com avatar e nome #}
+              <div class="dropdown-profile-header">
+                <div class="dropdown-avatar-lg">
+                  {{ session.get('user_nome', '?')[:1].upper() }}{{ session.get('user_nome', '?').split(' ')[-1][:1].upper() if ' ' in session.get('user_nome', '') else '' }}
+                </div>
+                <div>
+                  <div class="dropdown-profile-name">{{ session.get('user_nome', '') }}</div>
+                  <div class="dropdown-profile-user">
+                    <i class="fa-solid fa-at" style="font-size:.6rem"></i>
+                    {{ session.get('usuario', session.get('email', '')) }}
+                  </div>
+                </div>
+              </div>
+
+              {# ── SÍNDICO ────────────────────────────────── #}
+              {% if session.get('cargo') == 'sindico' %}
+              <div class="dropdown-role-badge dropdown-role-badge--sindico">
+                <i class="fa-solid fa-crown"></i> Síndico
+              </div>
+              <hr class="dropdown-divider">
+              <a href="{{ url_for('funcionarios') }}" class="dropdown-item">
+                <i class="fa-solid fa-id-badge"></i> Funcionários
+              </a>
+              <a href="{{ url_for('escalas') }}" class="dropdown-item">
+                <i class="fa-solid fa-calendar-week"></i> Escalas
+              </a>
+              <a href="{{ url_for('index') }}" class="dropdown-item">
+                <i class="fa-solid fa-gauge-high"></i> Painel
+              </a>
+
+              {# ── FUNCIONÁRIO ────────────────────────────── #}
+              {% elif session.get('cargo') == 'administrador' %}
+              <div class="dropdown-role-badge dropdown-role-badge--sindico" style="background:#e0f2fe;color:#0369a1">
+                <i class="fa-solid fa-user-gear"></i> Administrador
+              </div>
+              <hr class="dropdown-divider">
+              <a href="{{ url_for('funcionarios') }}" class="dropdown-item">
+                <i class="fa-solid fa-id-badge"></i> Funcionários
+              </a>
+              <a href="{{ url_for('escalas') }}" class="dropdown-item">
+                <i class="fa-solid fa-calendar-week"></i> Escalas
+              </a>
+              <a href="{{ url_for('index') }}" class="dropdown-item">
+                <i class="fa-solid fa-gauge-high"></i> Painel
+              </a>
+              {% elif session.get('cargo') in ['porteiro','zelador','seguranca','limpeza','funcionario'] %}
+              <div class="dropdown-role-badge dropdown-role-badge--funcionario">
+                <i class="fa-solid fa-id-badge"></i>
+                {{ session.get('cargo', 'Funcionário') | capitalize }}
+              </div>
+              <hr class="dropdown-divider">
+              <a href="{{ url_for('escalas') }}" class="dropdown-item">
+                <i class="fa-solid fa-calendar-week"></i> Minha Escala
+              </a>
+              <a href="{{ url_for('index') }}" class="dropdown-item">
+                <i class="fa-solid fa-gauge-high"></i> Painel
+              </a>
+
+              {# ── MORADOR ────────────────────────────────── #}
+              {% elif session.get('cargo') == 'morador' %}
+              <div class="dropdown-role-badge dropdown-role-badge--morador">
+                <i class="fa-solid fa-house-user"></i> Morador
+              </div>
+              {% if session.get('unidade') or session.get('bloco') %}
+              <div class="dropdown-info-row">
+                {% if session.get('bloco') %}
+                <span><i class="fa-solid fa-building"></i> Bloco {{ session.get('bloco') }}</span>
+                {% endif %}
+                {% if session.get('unidade') %}
+                <span><i class="fa-solid fa-door-open"></i> Unidade {{ session.get('unidade') }}</span>
+                {% endif %}
+              </div>
+              {% endif %}
+              <hr class="dropdown-divider">
+              <a href="{{ url_for('fazer_reservas') }}" class="dropdown-item">
+                <i class="fa-solid fa-calendar-check"></i> Reservas
+              </a>
+              <a href="{{ url_for('cobranca') }}" class="dropdown-item">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Cobranças
+              </a>
+              <a href="{{ url_for('index') }}" class="dropdown-item">
+                <i class="fa-solid fa-gauge-high"></i> Painel
+              </a>
+
+              {# ── OUTRO CARGO ────────────────────────────── #}
+              {% else %}
+              <div class="dropdown-role-badge dropdown-role-badge--funcionario">
+                <i class="fa-solid fa-user"></i>
+                {{ session.get('cargo', '') | capitalize }}
+              </div>
+              <hr class="dropdown-divider">
+              <a href="{{ url_for('index') }}" class="dropdown-item">
+                <i class="fa-solid fa-gauge-high"></i> Painel
+              </a>
+              {% endif %}
+
+              <hr class="dropdown-divider">
+              <a href="{{ url_for('sobre') }}" class="dropdown-item">
+                <i class="fa-solid fa-circle-info"></i> Sobre
+              </a>
+              <a href="{{ url_for('perfil') }}" class="dropdown-item">
+                <i class="fa-solid fa-gear"></i> Configurações
+              </a>
+              <a href="{{ url_for('logout') }}" class="dropdown-item dropdown-item--danger">
+                <i class="fa-solid fa-right-from-bracket"></i> Sair
+              </a>
+
+            {# ══════════════════════════════════════════════════
+               NÃO LOGADO — mostra formulário de login
+            ══════════════════════════════════════════════════ #}
+            {% else %}
+            <div class="login-panel">
+              <p class="dropdown-section-title">
+                <i class="fa-solid fa-lock"></i> Entrar
+              </p>
+              <form method="post" action="{{ url_for('login') }}" class="login-form-inline">
+                <label for="dd-username">Usuário ou E-mail</label>
+                <input type="text"     id="dd-username" name="username" placeholder="usuario ou email"  autocomplete="username">
+                <label for="dd-password">Senha</label>
+                <input type="password" id="dd-password" name="password" placeholder="••••••••"    autocomplete="current-password">
+                <button type="submit" class="btn-login">Entrar</button>
+              </form>
+            </div>
+            <hr class="dropdown-divider">
+            <a href="{{ url_for('perfil') }}" class="dropdown-item">
+              <i class="fa-solid fa-gear"></i> Configurações
+            </a>
+            <a href="{{ url_for('sobre') }}"  class="dropdown-item">
+              <i class="fa-solid fa-circle-info"></i> Sobre
+            </a>
+            <a href="{{ url_for('logout') }}" class="dropdown-item dropdown-item--danger">
+              <i class="fa-solid fa-right-from-bracket"></i> Sair
+            </a>
+            {% endif %}
+
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- CONTEÚDO DA PÁGINA -->
+    <main class="page-content">
+      {% block conteudo_body %}{% endblock %}
+    </main>
+
+    <footer class="app-footer">
+      <p>&copy; 2024 Smart Condominium &mdash; Todos os direitos reservados.</p>
+    </footer>
+
+  </div><!-- /main-wrapper -->
+
+  <!-- ══════════════════════════════════════════════════════════
+       SUPORTE FAB
+  ══════════════════════════════════════════════════════════ -->
+  <button id="support-button" class="support-fab" type="button" aria-label="Suporte">
+    <i class="fa-solid fa-headset"></i>
+  </button>
+
+  <div id="support-chat" class="support-chat">
+    <div class="support-chat-header">
+      <span><i class="fa-solid fa-headset"></i> Suporte</span>
+      <button class="support-close" id="supportClose" type="button" aria-label="Fechar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div id="support-messages" class="support-messages"></div>
+    <div class="support-input-row">
+      <input type="text" id="support-input" class="support-input" placeholder="Digite sua mensagem...">
+      <button id="send-button" class="support-send" type="button">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scripts de terceiros -->
+  <script src="{{ url_for('static', filename='js/inicio.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/cadastro_condominio.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/teste_paginacao.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+
+  <script>
+  /* ============================================================
+     TEMPLATE CONTROLLER — todas as interações do layout
+  ============================================================ */
+  (function () {
+    'use strict';
+
+    /* ── 1. SIDEBAR: brand-click toggle ─────────────────────── */
+    var sidebar = document.getElementById('sidebar');
+    var wrapper = document.getElementById('mainWrapper');
+    var toggle  = document.getElementById('sidebarToggle');
+    var arrow   = document.getElementById('brandArrow');
+
+    if (toggle) {
+      toggle.addEventListener('click', function () {
+        sidebar.classList.toggle('collapsed');
+        wrapper.classList.toggle('expanded');
+        if (arrow) {
+          arrow.style.transform = sidebar.classList.contains('collapsed')
+            ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+      });
+    }
+
+    /* ── 2. ACTIVE NAV LINK ──────────────────────────────────── */
+    var path = window.location.pathname;
+    document.querySelectorAll('.nav-link').forEach(function (el) {
+      if (el.getAttribute('href') === path) el.classList.add('active');
+    });
+
+    /* ── 3. USER DROPDOWN ────────────────────────────────────── */
+    var avatarBtn = document.getElementById('userAvatarBtn');
+    var dropdown  = document.getElementById('userDropdown');
+
+    if (avatarBtn && dropdown) {
+      /* Abre/fecha ao clicar no avatar */
+      avatarBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('open');
+      });
+
+      /* Clique dentro do dropdown não fecha */
+      dropdown.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+
+      /* Clique fora fecha */
+      document.addEventListener('click', function () {
+        dropdown.classList.remove('open');
+      });
+    }
+
+    /* ── 4. SUPORTE: abrir / fechar ──────────────────────────── */
+    var supportBtn   = document.getElementById('support-button');
+    var supportChat  = document.getElementById('support-chat');
+    var supportClose = document.getElementById('supportClose');
+    var supportInput = document.getElementById('support-input');
+    var sendBtn      = document.getElementById('send-button');
+    var msgBox       = document.getElementById('support-messages');
+
+    function openChat  () { if (supportChat) supportChat.classList.add('open');    }
+    function closeChat () { if (supportChat) supportChat.classList.remove('open'); }
+
+    if (supportBtn)   supportBtn.addEventListener('click', function () {
+      if (supportChat) supportChat.classList.toggle('open');
+    });
+
+    /* CLOSE — stopPropagation para não conflitar com outros listeners */
+    if (supportClose) supportClose.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      closeChat();
+    });
+
+    /* ── 5. CHAT DO SUPORTE ──────────────────────────────────── */
+    var autoReplies = [
+      'Olá! Como posso ajudar?',
+      'Aguarde um momento enquanto buscamos a resposta.',
+      'Pode ser mais específico com sua dúvida?',
+      'Infelizmente não podemos ajudar agora. Tente mais tarde.',
+      'Sua mensagem foi recebida! Em breve retornamos.',
+    ];
+
+    function addBubble(text, isUser) {
+      if (!msgBox) return;
+      var row    = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:' + (isUser ? 'flex-end' : 'flex-start') + ';margin-bottom:8px';
+      var bubble = document.createElement('span');
+      bubble.className   = isUser ? 'user-bubble' : 'support-bubble';
+      bubble.textContent = text;
+      row.appendChild(bubble);
+      msgBox.appendChild(row);
+      msgBox.scrollTop = msgBox.scrollHeight;
+    }
+
+    function handleSend() {
+      if (!supportInput) return;
+      var msg = supportInput.value.trim();
+      if (!msg) return;
+      addBubble(msg, true);
+      supportInput.value = '';
+      setTimeout(function () {
+        addBubble(autoReplies[Math.floor(Math.random() * autoReplies.length)], false);
+      }, 650);
+    }
+
+    if (sendBtn)      sendBtn.addEventListener('click', handleSend);
+    if (supportInput) supportInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') handleSend();
+    });
+
+
+    /* ── 6. MOBILE SIDEBAR ───────────────────────────────────── */
+    var overlay    = document.getElementById('sidebarOverlay');
+    var mobileBtn  = document.getElementById('mobileMenuBtn');
+    var isMobile   = function () { return window.innerWidth <= 768; };
+
+    function openMobileSidebar() {
+      sidebar.classList.add('mobile-open');
+      if (overlay) overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobileSidebar() {
+      sidebar.classList.remove('mobile-open');
+      if (overlay) overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    if (mobileBtn) {
+      mobileBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (isMobile()) {
+          sidebar.classList.contains('mobile-open') ? closeMobileSidebar() : openMobileSidebar();
+        } else {
+          sidebar.classList.toggle('collapsed');
+          wrapper.classList.toggle('expanded');
+          if (arrow) arrow.style.transform = sidebar.classList.contains('collapsed') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+      });
+    }
+
+    if (overlay) overlay.addEventListener('click', closeMobileSidebar);
+
+    /* Fecha sidebar mobile ao navegar */
+    document.querySelectorAll('.nav-link').forEach(function (el) {
+      el.addEventListener('click', function () {
+        if (isMobile()) closeMobileSidebar();
+      });
+    });
+
+    /* Ajusta ao redimensionar */
+    window.addEventListener('resize', function () {
+      if (!isMobile()) closeMobileSidebar();
+    });
+
+  })();
+  </script>
+
+</body>
+</html>

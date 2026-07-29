@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <title>Escala de Trabalho — Smart Condominium</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:       #2563eb;
+      --brand-light: #eff6ff;
+      --text-primary:   #0f172a;
+      --text-secondary: #475569;
+      --text-muted:     #94a3b8;
+      --border:         #e2e8f0;
+      --bg:             #f8fafc;
+      --card-bg:        #ffffff;
+      --sidebar-bg:     #1e293b;
+      --radius:         10px;
+      --shadow:         0 4px 20px rgba(0,0,0,.08);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background:  var(--bg);
+      color:       var(--text-primary);
+      min-height:  100vh;
+    }
+
+    /* ── Barra de controle (some no print) ─────────────────── */
+    .ctrl-bar {
+      background:    var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding:       14px 32px;
+      display:       flex;
+      align-items:   center;
+      justify-content: space-between;
+      gap:           12px;
+      flex-wrap:     wrap;
+      position:      sticky;
+      top:           0;
+      z-index:       10;
+      box-shadow:    0 2px 8px rgba(0,0,0,.06);
+    }
+    .ctrl-bar-left {
+      display:     flex;
+      align-items: center;
+      gap:         14px;
+    }
+    .ctrl-bar-brand {
+      display:     flex;
+      align-items: center;
+      gap:         8px;
+      font-weight: 700;
+      font-size:   1rem;
+      color:       var(--brand);
+    }
+    .ctrl-bar-brand i { font-size: 1.2rem; }
+    .ctrl-bar-title {
+      font-size:   .85rem;
+      color:       var(--text-secondary);
+      font-weight: 500;
+    }
+    .ctrl-bar-actions { display: flex; gap: 10px; align-items: center; }
+
+    .btn { display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;font-size:.82rem;font-family:inherit;font-weight:600;cursor:pointer;border:none;transition:all .15s;text-decoration:none; }
+    .btn-primary   { background:var(--brand);color:#fff; }
+    .btn-primary:hover { background:#1d4ed8; transform:translateY(-1px); box-shadow:0 4px 12px rgba(37,99,235,.3); }
+    .btn-secondary { background:var(--card-bg);color:var(--text-secondary);border:1px solid var(--border); }
+    .btn-secondary:hover { background:var(--bg);color:var(--brand);border-color:var(--brand); }
+    .btn-danger { background:#fef2f2;color:#dc2626;border:1px solid #fecaca; }
+    .btn-danger:hover { background:#fee2e2; }
+
+    /* Filtro de funcionário */
+    .filter-wrap {
+      display:     flex;
+      align-items: center;
+      gap:         10px;
+      flex-wrap:   wrap;
+    }
+    .filter-label { font-size:.78rem;font-weight:600;color:var(--text-secondary); }
+    .filter-select {
+      padding:6px 12px;border:1px solid var(--border);border-radius:8px;
+      font-size:.82rem;font-family:inherit;background:var(--bg);color:var(--text-primary);
+      outline:none;cursor:pointer;
+    }
+    .filter-select:focus { border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.15); }
+
+    /* Navegação de semana inline */
+    .week-nav {
+      display:     flex;
+      align-items: center;
+      gap:         8px;
+    }
+    .week-nav-btn {
+      width:34px;height:34px;border:1px solid var(--border);border-radius:8px;
+      background:var(--bg);color:var(--text-secondary);display:flex;align-items:center;
+      justify-content:center;cursor:pointer;font-size:.8rem;transition:all .15s;
+    }
+    .week-nav-btn:hover { background:var(--brand);color:#fff;border-color:var(--brand); }
+    .week-nav-label { font-size:.82rem;font-weight:600;color:var(--text-primary);white-space:nowrap; }
+
+    /* ── Conteúdo principal ────────────────────────────────── */
+    .page-wrap {
+      max-width: 1200px;
+      margin:    0 auto;
+      padding:   32px 24px 60px;
+      overflow-x: hidden;
+    }
+
+    /* Cabeçalho do documento */
+    .doc-header {
+      display:       flex;
+      align-items:   flex-start;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      gap:           16px;
+      flex-wrap:     wrap;
+    }
+    .doc-title { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); }
+    .doc-subtitle { font-size: .85rem; color: var(--text-secondary); margin-top: 4px; }
+    .doc-meta {
+      display:  flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .doc-meta-item { font-size:.75rem;color:var(--text-muted);display:flex;align-items:center;gap:5px; }
+
+    /* Aviso de funcionário filtrado */
+    .func-banner {
+      display:       none;
+      align-items:   center;
+      gap:           10px;
+      background:    var(--brand-light);
+      border:        1px solid #bfdbfe;
+      border-radius: var(--radius);
+      padding:       12px 18px;
+      margin-bottom: 20px;
+      font-size:     .85rem;
+      color:         #1e40af;
+      font-weight:   500;
+    }
+    .func-banner.visible { display: flex; }
+    .func-avatar-sm {
+      width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+      justify-content:center;font-size:.68rem;font-weight:700;color:#fff;flex-shrink:0;
+    }
+
+    /* ── Tabela de escala ──────────────────────────────────── */
+    .escala-card {
+      background:    var(--card-bg);
+      border:        1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow:    var(--shadow);
+      overflow:      hidden;
+    }
+
+    .table-wrap { overflow-x: visible; }
+
+    .escala-table {
+      width:           100%;
+      table-layout:    fixed;
+      border-collapse: separate;
+      border-spacing:  0;
+    }
+    /* Coluna do funcionário: 20%, os 7 dias dividem o restante igualmente */
+    .escala-table thead th:first-child,
+    .escala-table tbody tr td:first-child { width: 20%; }
+    .escala-table thead th:not(:first-child),
+    .escala-table tbody tr td:not(:first-child) { width: 11.43%; }
+    .escala-table thead th {
+      background:     var(--sidebar-bg);
+      color:          #fff;
+      font-size:      .72rem;
+      font-weight:    700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      padding:        10px 8px;
+      text-align:     center;
+      white-space:    nowrap;
+    }
+    .escala-table thead th:first-child { text-align: left; }
+    .escala-table tbody tr td {
+      padding:        9px 8px;
+      font-size:      .8rem;
+      border-bottom:  1px solid var(--border);
+      vertical-align: middle;
+      text-align:     center;
+    }
+    .escala-table tbody tr:last-child td { border-bottom: none; }
+    .escala-table tbody tr { transition: background .12s; }
+    .escala-table tbody tr:hover { background: #f8fafc; }
+    .escala-table tbody tr.minha-linha { background: var(--brand-light) !important; border-left: 3px solid var(--brand); }
+    .escala-table tbody tr.hidden-row  { display: none; }
+
+    /* Célula do funcionário */
+    .func-cell { display:flex;align-items:center;gap:10px;text-align:left;white-space:nowrap; }
+    .func-avatar {
+      width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+      justify-content:center;font-size:.65rem;font-weight:700;color:#fff;flex-shrink:0;
+    }
+    .func-name  { font-size:.83rem;font-weight:600;color:var(--text-primary); }
+    .func-cargo { font-size:.68rem;color:var(--text-muted); }
+
+    /* Badges de turno */
+    .turno-badge {
+      display:inline-flex;align-items:center;justify-content:center;gap:4px;
+      padding:4px 6px;border-radius:6px;font-size:.7rem;font-weight:700;
+      white-space:nowrap;min-width:68px;
+    }
+    .turno-manha  { background:#fef9c3;color:#854d0e;border:1px solid #fde047; }
+    .turno-tarde  { background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4; }
+    .turno-noite  { background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd; }
+    .turno-folga  { background:#f0fdf4;color:#166534;border:1px solid #86efac; }
+    .turno-ferias { background:#ecfeff;color:#164e63;border:1px solid #67e8f9; }
+    .turno-vazio  { background:#f1f5f9;color:var(--text-muted);border:1px dashed var(--border); }
+
+    .turno-hora { display:block;font-size:.62rem;font-weight:400;opacity:.75;margin-top:2px; }
+
+    /* Eu tag */
+    .eu-tag {
+      display:inline-flex;align-items:center;background:var(--brand);color:#fff;
+      font-size:.55rem;font-weight:700;padding:1px 6px;border-radius:20px;
+      letter-spacing:.04em;text-transform:uppercase;margin-left:5px;vertical-align:middle;
+    }
+
+    /* ── Blocos de semana (modo mês) ──────────────────────── */
+    .semana-bloco {
+      margin-bottom:  20px;
+    }
+    .semana-bloco-label {
+      font-size:     .72rem;
+      font-weight:   700;
+      color:         var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      padding:       0 4px 8px;
+      display:       flex;
+      align-items:   center;
+      gap:           6px;
+    }
+    .semana-bloco-label::before {
+      content:       '';
+      display:       inline-block;
+      width:         3px;
+      height:        14px;
+      background:    var(--brand);
+      border-radius: 2px;
+    }
+    .th-semana-label {
+      text-align: left !important;
+      font-size:  .65rem !important;
+      letter-spacing: .04em !important;
+    }
+
+    /* Legenda */
+    .legenda {
+      display:     flex;
+      align-items: center;
+      gap:         16px;
+      flex-wrap:   wrap;
+      padding:     14px 20px;
+      border-top:  1px solid var(--border);
+      background:  #fafbfc;
+    }
+    .legenda-titulo { font-size:.7rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em; }
+    .legenda-item { display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--text-secondary); }
+    .legenda-dot  { width:10px;height:10px;border-radius:2px;flex-shrink:0; }
+
+    /* ── Sem resultados ────────────────────────────────────── */
+    .empty-row td { text-align:center;padding:40px;color:var(--text-muted); }
+
+    /* ══════════════════════════════════════════════════════
+       PRINT — estilos para impressão / PDF
+    ══════════════════════════════════════════════════════ */
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 10mm 8mm;
+      }
+
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+      body        { background: #fff !important; font-size: 9pt; }
+      .ctrl-bar   { display: none !important; }
+      .page-wrap  { padding: 0; max-width: 100%; width: 100%; }
+
+      /* Força toda a tabela a caber na largura sem scroll */
+      .table-wrap  { overflow: visible !important; width: 100% !important; }
+      .escala-card { box-shadow: none !important; border: 1px solid #ccc; width: 100%; }
+      .semana-bloco { margin-bottom: 10px !important; break-inside: avoid; }
+      .semana-bloco-label { font-size: 6.5pt !important; padding-bottom: 4px !important; }
+      .escala-table {
+        width: 100% !important;
+        table-layout: fixed !important;
+        font-size: 8pt !important;
+      }
+
+      /* Cabeçalho compacto no print */
+      .escala-table thead th {
+        padding: 7px 4px !important;
+        font-size: 7pt !important;
+        letter-spacing: 0 !important;
+      }
+      .escala-table tbody tr td {
+        padding: 6px 4px !important;
+        font-size: 8pt !important;
+      }
+
+      /* Badges menores no print */
+      .turno-badge {
+        padding: 3px 4px !important;
+        font-size: 7pt !important;
+        min-width: 0 !important;
+        border-radius: 4px !important;
+      }
+      .turno-hora { font-size: 6pt !important; }
+
+      /* Célula do funcionário compacta */
+      .func-cell { gap: 6px !important; }
+      .func-avatar { width: 24px !important; height: 24px !important; font-size: .55rem !important; }
+      .func-name  { font-size: 8pt !important; }
+      .func-cargo { font-size: 6.5pt !important; }
+
+      /* Larguras fixas das colunas no print */
+      .escala-table thead th:first-child,
+      .escala-table tbody tr td:first-child { width: 18% !important; }
+      .escala-table thead th:not(:first-child),
+      .escala-table tbody tr td:not(:first-child) { width: 11.7% !important; }
+
+      /* Legenda compacta */
+      .legenda { padding: 8px 12px !important; gap: 10px !important; font-size: 7pt !important; }
+      .legenda-dot { width: 8px !important; height: 8px !important; }
+
+      /* Cabeçalho do documento */
+      .doc-header  { margin-bottom: 10px !important; }
+      .doc-title   { font-size: 14pt !important; }
+      .doc-subtitle { font-size: 8pt !important; }
+      .doc-meta-item { font-size: 7pt !important; }
+      .func-banner { padding: 8px 12px !important; font-size: 8pt !important; margin-bottom: 10px !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Barra de controle (some no print) ─────────────────────── -->
+<div class="ctrl-bar" id="ctrlBar">
+  <div class="ctrl-bar-left">
+    <div class="ctrl-bar-brand">
+      <i class="fa-solid fa-building"></i> SmartCond
+    </div>
+    <span class="ctrl-bar-title">/ Visualização de Escala</span>
+  </div>
+
+  <div class="filter-wrap">
+    <label class="filter-label"><i class="fa-solid fa-filter"></i> Filtrar:</label>
+    <select id="funcFilter" class="filter-select" onchange="filtrarFunc()">
+      <option value="">Todos os funcionários</option>
+    </select>
+    <!-- Navegação de semana (modo "todos") -->
+    <div class="week-nav" id="weekNavWrap" style="display:flex">
+      <button class="week-nav-btn" onclick="prevSemana()" title="Semana anterior"><i class="fa-solid fa-chevron-left"></i></button>
+      <span class="week-nav-label" id="semanaLabel">–</span>
+      <button class="week-nav-btn" onclick="nextSemana()" title="Próxima semana"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <!-- Navegação de mês (modo "um funcionário") -->
+    <div class="week-nav" id="monthNavWrap" style="display:none">
+      <button class="week-nav-btn" onclick="prevMes()" title="Mês anterior"><i class="fa-solid fa-chevron-left"></i></button>
+      <span class="week-nav-label" id="mesLabel" style="min-width:160px;text-align:center">–</span>
+      <button class="week-nav-btn" onclick="nextMes()" title="Próximo mês"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="ctrl-bar-actions">
+    <a href="/escalas" class="btn btn-secondary">
+      <i class="fa-solid fa-arrow-left"></i> Voltar
+    </a>
+    <button class="btn btn-primary" onclick="imprimirPDF()">
+      <i class="fa-solid fa-file-pdf"></i> Baixar PDF
+    </button>
+  </div>
+</div>
+
+<!-- ── Conteúdo ──────────────────────────────────────────────── -->
+<div class="page-wrap">
+
+  <!-- Cabeçalho do documento -->
+  <div class="doc-header">
+    <div>
+      <div class="doc-title"><i class="fa-solid fa-calendar-week" style="color:var(--brand)"></i> Escala de Trabalho</div>
+      <div class="doc-subtitle" id="docSubtitle">Smart Condominium — Equipe Completa</div>
+    </div>
+    <div class="doc-meta">
+      <div class="doc-meta-item"><i class="fa-regular fa-calendar"></i> <span id="docSemana">–</span></div>
+      <div class="doc-meta-item"><i class="fa-regular fa-clock"></i> Gerado em <span id="docGerado">–</span></div>
+    </div>
+  </div>
+
+  <!-- Banner do funcionário filtrado -->
+  <div class="func-banner" id="funcBanner">
+    <div class="func-avatar-sm" id="bannerAvatar"></div>
+    <span id="bannerText"></span>
+  </div>
+
+  <!-- Container dinâmico: renderizado por JS conforme o modo -->
+  <div id="escalaContainer"></div>
+
+</div><!-- /page-wrap -->
+
+<!-- Config via data attributes (passado pela URL ou localStorage) -->
+<div id="escala-config"
+     data-is-sindico="false"
+     data-user-cargo=""
+     data-user-nome=""
+     style="display:none" aria-hidden="true"></div>
+
+<script>
+  /* ── Parâmetros da URL ─────────────────────────────────────── */
+  var params    = new URLSearchParams(window.location.search);
+  var userNome  = params.get('nome')  || '';
+  var userCargo = params.get('cargo') || '';
+
+  /* ── Dados ─────────────────────────────────────────────────── */
+  var FUNCIONARIOS = [
+    { id:1, nome:'Maria Santos',   cargo:'Síndico',   cor:'#2563eb' },
+    { id:2, nome:'José Silva',     cargo:'Porteiro',  cor:'#7c3aed' },
+    { id:3, nome:'Ana Oliveira',   cargo:'Zelador',   cor:'#059669' },
+    { id:4, nome:'Carlos Pereira', cargo:'Segurança', cor:'#dc2626' },
+    { id:5, nome:'Fernanda Lima',  cargo:'Limpeza',   cor:'#d97706' },
+  ];
+
+  var DIAS_SEMANA  = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  var MESES        = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                      'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var escalaData   = {};
+  var semanaOffset = 0;   /* usado no modo "todos" */
+  var mesOffset    = 0;   /* usado no modo "um funcionário" */
+  var funcFiltroId = 0;   /* 0 = todos */
+
+  /* ── Inicializa escala padrão ──────────────────────────────── */
+  (function initEscala() {
+    var def = {
+      1:['manha','manha','manha','manha','manha','',''],
+      2:['tarde','tarde','tarde','tarde','tarde','',''],
+      3:['manha','manha','manha','manha','manha','folga',''],
+      4:['noite','noite','noite','noite','noite','','folga'],
+      5:['manha','manha','manha','manha','','',''],
+    };
+    var h = { manha:['08:00','17:00'],tarde:['13:00','22:00'],noite:['22:00','06:00'],folga:['–','–'],ferias:['–','–'] };
+    FUNCIONARIOS.forEach(function(f){
+      def[f.id].forEach(function(t,d){
+        if(t) escalaData[f.id+'_'+d]={ turno:t, entrada:h[t][0], saida:h[t][1] };
+      });
+    });
+  })();
+
+  /* ── Helpers ───────────────────────────────────────────────── */
+  function fmtDate(d)     { return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); }
+  function initials(n)    { return n.split(' ').slice(0,2).map(function(p){return p[0];}).join('').toUpperCase(); }
+  function turnoInfo(t) {
+    var m = {
+      manha: {label:'Manhã', cls:'turno-manha', icon:'☀️'},
+      tarde: {label:'Tarde', cls:'turno-tarde', icon:'🌤️'},
+      noite: {label:'Noite', cls:'turno-noite', icon:'🌙'},
+      folga: {label:'Folga', cls:'turno-folga', icon:'🏖️'},
+      ferias:{label:'Férias',cls:'turno-ferias',icon:'🌴'},
+    };
+    return m[t] || null;
+  }
+
+  /* Retorna a segunda-feira da semana que contém 'd' */
+  function segundaDaSemana(d) {
+    var s = new Date(d);
+    var dow = s.getDay();
+    s.setDate(s.getDate() - (dow === 0 ? 6 : dow - 1));
+    s.setHours(0,0,0,0);
+    return s;
+  }
+
+  /* Retorna array de 7 dias a partir de uma segunda */
+  function diasDaSemana(seg) {
+    var dias = [];
+    for(var i = 0; i < 7; i++) {
+      var d = new Date(seg);
+      d.setDate(seg.getDate() + i);
+      dias.push(d);
+    }
+    return dias;
+  }
+
+  /* Retorna todas as semanas (array de arrays) que cobrem o mês */
+  function semanasDoMes(ano, mes) {
+    var primeiroDia = new Date(ano, mes, 1);
+    var ultimoDia   = new Date(ano, mes + 1, 0);
+    var semanas     = [];
+    var seg = segundaDaSemana(primeiroDia);
+    while(seg <= ultimoDia) {
+      semanas.push(diasDaSemana(seg));
+      var proxSeg = new Date(seg);
+      proxSeg.setDate(seg.getDate() + 7);
+      seg = proxSeg;
+    }
+    return semanas;
+  }
+
+  /* ── Popula select de funcionários ─────────────────────────── */
+  function populateSelect() {
+    var sel = document.getElementById('funcFilter');
+    FUNCIONARIOS.forEach(function(f){
+      var opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.nome + ' — ' + f.cargo;
+      sel.appendChild(opt);
+    });
+    if(userNome) {
+      var found = FUNCIONARIOS.find(function(f){ return f.nome === userNome; });
+      if(found){ sel.value = found.id; funcFiltroId = found.id; }
+    }
+  }
+
+  /* ── Renderização principal ─────────────────────────────────── */
+  function render() {
+    if(funcFiltroId) {
+      renderMes();
+    } else {
+      renderSemana();
+    }
+    atualizarBanner();
+    atualizarControles();
+  }
+
+  /* ── Modo TODOS: uma semana, todas as linhas ─────────────────── */
+  function renderSemana() {
+    var hoje  = new Date(); hoje.setHours(0,0,0,0);
+    var base  = new Date(); base.setHours(0,0,0,0);
+    var dow   = base.getDay();
+    base.setDate(base.getDate() - (dow === 0 ? 6 : dow - 1) + semanaOffset * 7);
+    var dias  = diasDaSemana(base);
+
+    /* Cabeçalho */
+    var hh = '<tr><th>Funcionário</th>';
+    dias.forEach(function(d,i){
+      var isHoje = d.getTime() === hoje.getTime();
+      hh += '<th'+(isHoje?' style="background:#1d4ed8"':'')+'>'+DIAS_SEMANA[(i+1)%7]
+          + '<br><small style="font-weight:400;opacity:.75">'+fmtDate(d)+'</small></th>';
+    });
+
+    /* Corpo */
+    var bh = '';
+    FUNCIONARIOS.forEach(function(f){
+      var isMe = userNome && userNome === f.nome;
+      bh += '<tr'+(isMe?' class="minha-linha"':'')+'>'+buildFuncCell(f, isMe);
+      dias.forEach(function(d,i){
+        bh += buildTurnoCell(f, (i+1)%7, d, hoje);
+      });
+      bh += '</tr>';
+    });
+
+    document.getElementById('escalaContainer').innerHTML =
+      '<div class="escala-card">'
+      + '<div class="table-wrap"><table class="escala-table">'
+      + '<thead>'+hh+'</tr></thead><tbody>'+bh+'</tbody>'
+      + '</table></div>'
+      + buildLegenda()
+      + '</div>';
+
+    /* Label de semana */
+    var label = fmtDate(dias[0])+' – '+fmtDate(dias[6]);
+    document.getElementById('semanaLabel').textContent = label;
+    document.getElementById('docSemana').textContent   = label;
+    document.getElementById('docGerado').textContent   = new Date().toLocaleString('pt-BR');
+  }
+
+  /* ── Modo UM FUNCIONÁRIO: mês inteiro, semanas empilhadas ────── */
+  function renderMes() {
+    var f     = FUNCIONARIOS.find(function(x){ return x.id == funcFiltroId; });
+    if(!f) return;
+
+    var hoje  = new Date(); hoje.setHours(0,0,0,0);
+    var ref   = new Date();
+    ref.setDate(1);
+    ref.setMonth(ref.getMonth() + mesOffset);
+
+    var ano     = ref.getFullYear();
+    var mes     = ref.getMonth();
+    var semanas = semanasDoMes(ano, mes);
+    var nomeMes = MESES[mes] + ' / ' + ano;
+
+    var html = '';
+    semanas.forEach(function(dias, idx){
+      /* Cabeçalho da semana */
+      var hh = '<tr><th class="th-semana-label">Semana '+(idx+1)+'</th>';
+      dias.forEach(function(d,i){
+        var isHoje    = d.getTime() === hoje.getTime();
+        var diaDoMes  = d.getMonth() === mes;   /* dia pertence ao mês atual */
+        var thStyle   = isHoje ? 'background:#1d4ed8' : (!diaDoMes ? 'background:#374151;opacity:.5' : '');
+        hh += '<th'+(thStyle?' style="'+thStyle+'"':'')+'>'+DIAS_SEMANA[(i+1)%7]
+            + '<br><small style="font-weight:400;opacity:.75">'+fmtDate(d)+'</small></th>';
+      });
+      hh += '</tr>';
+
+      /* Linha do funcionário */
+      var bh = '<tr>'+buildFuncCell(f, true);
+      dias.forEach(function(d,i){
+        var diaDoMes = d.getMonth() === mes;
+        if(diaDoMes) {
+          bh += buildTurnoCell(f, (i+1)%7, d, hoje);
+        } else {
+          /* Dia fora do mês: célula acinzentada */
+          bh += '<td style="background:#f8fafc;color:#cbd5e1;font-size:.7rem">–</td>';
+        }
+      });
+      bh += '</tr>';
+
+      html += '<div class="semana-bloco">'
+            + '<div class="semana-bloco-label">'+DIAS_SEMANA[1]+' '+fmtDate(dias[0])+' — '+DIAS_SEMANA[0]+' '+fmtDate(dias[6])+'</div>'
+            + '<div class="escala-card" style="margin-bottom:0">'
+            + '<div class="table-wrap"><table class="escala-table">'
+            + '<thead>'+hh+'</thead><tbody>'+bh+'</tbody>'
+            + '</table></div>'
+            + '</div></div>';
+    });
+
+    html += buildLegenda();
+
+    document.getElementById('escalaContainer').innerHTML = html;
+
+    /* Labels */
+    document.getElementById('semanaLabel').textContent = nomeMes;
+    document.getElementById('docSemana').textContent   = nomeMes;
+    document.getElementById('docGerado').textContent   = new Date().toLocaleString('pt-BR');
+  }
+
+  /* ── Helpers de células ─────────────────────────────────────── */
+  function buildFuncCell(f, isMe) {
+    return '<td><div class="func-cell">'
+      + '<div class="func-avatar" style="background:'+f.cor+'">'+initials(f.nome)+'</div>'
+      + '<div><div class="func-name">'+f.nome+(isMe?'<span class="eu-tag">Você</span>':'')+'</div>'
+      + '<div class="func-cargo">'+f.cargo+'</div></div>'
+      + '</div></td>';
+  }
+
+  function buildTurnoCell(f, diaIdx, d, hoje) {
+    var entry = escalaData[f.id+'_'+diaIdx];
+    var info  = entry ? turnoInfo(entry.turno) : null;
+    var isHoje = d.getTime() === hoje.getTime();
+    var tdStyle = isHoje ? ' style="background:rgba(37,99,235,.06)"' : '';
+    var html = '<td'+tdStyle+'>';
+    if(info) {
+      html += '<span class="turno-badge '+info.cls+'">'+info.icon+' '+info.label
+            + (entry.entrada !== '–' ? '<span class="turno-hora">'+entry.entrada+'–'+entry.saida+'</span>' : '')
+            + '</span>';
+    } else {
+      html += '<span class="turno-badge turno-vazio">–</span>';
+    }
+    return html + '</td>';
+  }
+
+  function buildLegenda() {
+    return '<div class="legenda">'
+      + '<span class="legenda-titulo">Legenda:</span>'
+      + '<span class="legenda-item"><span class="legenda-dot" style="background:#ca8a04"></span>Manhã</span>'
+      + '<span class="legenda-item"><span class="legenda-dot" style="background:#be185d"></span>Tarde</span>'
+      + '<span class="legenda-item"><span class="legenda-dot" style="background:#7c3aed"></span>Noite</span>'
+      + '<span class="legenda-item"><span class="legenda-dot" style="background:#16a34a"></span>Folga</span>'
+      + '<span class="legenda-item"><span class="legenda-dot" style="background:#0891b2"></span>Férias</span>'
+      + '</div>';
+  }
+
+  /* ── Atualiza banner e navegação ────────────────────────────── */
+  function atualizarBanner() {
+    var banner = document.getElementById('funcBanner');
+    if(funcFiltroId) {
+      var f = FUNCIONARIOS.find(function(x){ return x.id == funcFiltroId; });
+      if(f) {
+        banner.classList.add('visible');
+        document.getElementById('bannerAvatar').style.background = f.cor;
+        document.getElementById('bannerAvatar').textContent      = initials(f.nome);
+        document.getElementById('bannerText').innerHTML = 'Escala de <strong>'+f.nome+'</strong> — '+f.cargo;
+        document.getElementById('docSubtitle').textContent = 'Smart Condominium — '+f.nome+' ('+f.cargo+')';
+        return;
+      }
+    }
+    banner.classList.remove('visible');
+    document.getElementById('docSubtitle').textContent = 'Smart Condominium — Equipe Completa';
+  }
+
+  function atualizarControles() {
+    var weekNav  = document.getElementById('weekNavWrap');
+    var monthNav = document.getElementById('monthNavWrap');
+    if(funcFiltroId) {
+      if(weekNav)  weekNav.style.display  = 'none';
+      if(monthNav) monthNav.style.display = 'flex';
+    } else {
+      if(weekNav)  weekNav.style.display  = 'flex';
+      if(monthNav) monthNav.style.display = 'none';
+    }
+  }
+
+  /* ── Navegação ──────────────────────────────────────────────── */
+  function prevSemana(){ semanaOffset--; render(); }
+  function nextSemana(){ semanaOffset++; render(); }
+  function prevMes()   { mesOffset--;    render(); }
+  function nextMes()   { mesOffset++;    render(); }
+
+  function filtrarFunc(){
+    funcFiltroId = parseInt(document.getElementById('funcFilter').value) || 0;
+    semanaOffset = 0;
+    mesOffset    = 0;
+    render();
+  }
+
+  function imprimirPDF(){ window.print(); }
+
+  /* ── Init ───────────────────────────────────────────────────── */
+  populateSelect();
+  render();
+</script>
+</body>
+</html>

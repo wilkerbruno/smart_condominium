@@ -1,0 +1,18 @@
+{% extends "template.html" %}
+{% block conteudo_body %}
+<div class="resultado_pesquisa">
+  <h1>Resultados da Pesquisa</h1>
+  <ul>
+    {% for resultado in resultados %}
+      <li>
+        <article class="article">
+          <img class="img_noticias" src="{{ url_for('static', filename='img/' + resultado.imagem) }}" />
+          <div class="txt_noticias">
+            <a href="#"><p>{{ resultado.conteudo }}</p></a>
+          </div>
+        </article>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Git
+.git/
+.gitignore
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Backups gerados pelos scripts de patch
+condominio/templates/*.bak_*
+
+# Scripts de migration/patch (não precisam estar no container)
+migration_usuario.py
+migrate_convite_escala.py
+migration_convite.sql
+patch_template_dropdown.py
+fix_dropdown_config.py
+fix_add_perfil.py
+inject_perfil_link.py
+dropdown_patch_manual.txt
+
+# Logs e banco local
+*.log
+*.db
+*.sqlite3
+
+# Nixpacks (não precisamos mais)
+nixpacks.toml
+.nixpacks/

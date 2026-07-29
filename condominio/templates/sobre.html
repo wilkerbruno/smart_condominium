@@ -1,0 +1,295 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/sobre.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ══════════════════════════════════════════════════════════
+     HERO
+══════════════════════════════════════════════════════════ -->
+<div class="sobre-hero">
+  <div class="hero-icon">
+    <i class="fa-solid fa-building"></i>
+  </div>
+  <div class="hero-text">
+    <h1>Smart Condominium</h1>
+    <p>Uma plataforma completa para a gestão moderna de condomínios. Desenvolvida para simplificar o dia a dia de síndicos, administradores e moradores, centralizando tudo em um único sistema intuitivo.</p>
+    <div class="hero-version">
+      <i class="fa-solid fa-code-branch"></i> Versão 1.0.0 &nbsp;·&nbsp;
+      <i class="fa-solid fa-circle" style="font-size:.5rem;color:#10b981"></i> Sistema Online
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     STATS
+══════════════════════════════════════════════════════════ -->
+<div class="sobre-stats">
+  <div class="sobre-stat-card">
+    <div class="sobre-stat-value">5</div>
+    <div class="sobre-stat-label">Condomínios</div>
+  </div>
+  <div class="sobre-stat-card">
+    <div class="sobre-stat-value">25</div>
+    <div class="sobre-stat-label">Unidades</div>
+  </div>
+  <div class="sobre-stat-card">
+    <div class="sobre-stat-value">23</div>
+    <div class="sobre-stat-label">Moradores</div>
+  </div>
+  <div class="sobre-stat-card">
+    <div class="sobre-stat-value">10</div>
+    <div class="sobre-stat-label">Módulos</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FUNCIONALIDADES
+══════════════════════════════════════════════════════════ -->
+<h2 class="section-title"><i class="fa-solid fa-grid-2"></i> Principais Funcionalidades</h2>
+
+<div class="features-grid">
+
+  <a href="{{ url_for('index') }}" class="feature-card">
+    <div class="feature-icon-wrap fi-blue"><i class="fa-solid fa-gauge-high"></i></div>
+    <div>
+      <div class="feature-title">Painel de Controle</div>
+      <div class="feature-desc">Visão geral com KPIs financeiros, gráficos de consumo e acesso rápido a todos os módulos do sistema.</div>
+    </div>
+    <div class="feature-link"><i class="fa-solid fa-arrow-right"></i> Ver painel</div>
+  </a>
+
+  <a href="{{ url_for('cobranca') }}" class="feature-card">
+    <div class="feature-icon-wrap fi-green"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+    <div>
+      <div class="feature-title">Controle Financeiro</div>
+      <div class="feature-desc">Emita cobranças, acompanhe recebimentos, controle inadimplência e gerencie o fluxo de caixa do condomínio.</div>
+    </div>
+    <div class="feature-link"><i class="fa-solid fa-arrow-right"></i> Ver cobranças</div>
+  </a>
+
+  <a href="{{ url_for('units') }}" class="feature-card">
+    <div class="feature-icon-wrap fi-cyan"><i class="fa-solid fa-door-open"></i></div>
+    <div>
+      <div class="feature-title">Gestão de Unidades</div>
+      <div class="feature-desc">Cadastre e gerencie todas as unidades com status de ocupação, tipo, área e dados do proprietário.</div>
+    </div>
+    <div class="feature-link"><i class="fa-solid fa-arrow-right"></i> Ver unidades</div>
+  </a>
+
+  <a href="{{ url_for('residents') }}" class="feature-card">
+    <div class="feature-icon-wrap fi-purple"><i class="fa-solid fa-users"></i></div>
+    <div>
+      <div class="feature-title">Moradores</div>
+      <div class="feature-desc">Cadastro completo de moradores com dados pessoais, veículos e vínculo com a unidade.</div>
+    </div>
+    <div class="feature-link"><i class="fa-solid fa-arrow-right"></i> Ver moradores</div>
+  </a>
+
+  <a href="{{ url_for('funcionarios') }}" class="feature-card">
+    <div class="feature-icon-wrap fi-amber"><i class="fa-solid fa-id-badge"></i></div>
+    <div>
+      <div class="feature-title">Gestão de Funcionários</div>
+      <div class="feature-desc">Controle de funcionários com cargo, horário, salário, benefícios e folha de pagamento.</div>
+    </div>
+    <div class="feature-link"><i class="fa-solid fa-arrow-right"></i> Ver funcionários</div>
+  </a>
+
+  <a href="{{ url_for('reservas') }}" class="feature-card">
+    <div class="feature-icon-wrap fi-teal"><i class="fa-solid fa-calendar-check"></i></div>
+    <div>
+      <div class="feature-title">Reservas de Espaços</div>
+      <div class="feature-desc">Agendamento das áreas comuns com calendário visual, controle de equipamentos e confirmações.</div>
+    </div>
+    <div class="feature-link"><i class="fa-solid fa-arrow-right"></i> Ver reservas</div>
+  </a>
+
+  <a href="{{ url_for('veiculo') }}" class="feature-card">
+    <div class="feature-icon-wrap fi-red"><i class="fa-solid fa-car"></i></div>
+    <div>
+      <div class="feature-title">Veículos</div>
+      <div class="feature-desc">Cadastro e controle de veículos dos moradores com placa, modelo, cor e vínculo com a unidade.</div>
+    </div>
+    <div class="feature-link"><i class="fa-solid fa-arrow-right"></i> Ver veículos</div>
+  </a>
+
+  <a href="{{ url_for('chat') }}" class="feature-card">
+    <div class="feature-icon-wrap fi-indigo"><i class="fa-solid fa-comments"></i></div>
+    <div>
+      <div class="feature-title">Chat Interno</div>
+      <div class="feature-desc">Comunicação direta entre síndico, portaria e moradores com histórico de mensagens e suporte a anexos.</div>
+    </div>
+    <div class="feature-link"><i class="fa-solid fa-arrow-right"></i> Abrir chat</div>
+  </a>
+
+  <a href="{{ url_for('recados') }}" class="feature-card">
+    <div class="feature-icon-wrap fi-pink"><i class="fa-solid fa-thumbtack"></i></div>
+    <div>
+      <div class="feature-title">Quadro de Recados</div>
+      <div class="feature-desc">Mural digital para avisos, comunicados, eventos e notificações com categorias e respostas.</div>
+    </div>
+    <div class="feature-link"><i class="fa-solid fa-arrow-right"></i> Ver recados</div>
+  </a>
+
+</div><!-- /features-grid -->
+
+<!-- ══════════════════════════════════════════════════════════
+     STACK + CHANGELOG
+══════════════════════════════════════════════════════════ -->
+<div class="sobre-2col">
+
+  <!-- Stack tecnológica -->
+  <div class="tech-card">
+    <h2 class="section-title" style="margin-bottom:14px"><i class="fa-solid fa-layer-group"></i> Stack Tecnológica</h2>
+    <div class="tech-list">
+      <div class="tech-item">
+        <span class="tech-badge tb-backend">Backend</span>
+        <div>
+          <div class="tech-name">Python / Flask</div>
+          <div class="tech-version">v3.12 / Flask 3.0.3</div>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-badge tb-database">Banco</span>
+        <div>
+          <div class="tech-name">MySQL + SQLAlchemy</div>
+          <div class="tech-version">MySQL 8 / SQLAlchemy 2.0</div>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-badge tb-backend">ORM</span>
+        <div>
+          <div class="tech-name">Flask-SQLAlchemy + PyMySQL</div>
+          <div class="tech-version">3.1.1 / 1.1.1</div>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-badge tb-frontend">Frontend</span>
+        <div>
+          <div class="tech-name">HTML5 + CSS3 + Vanilla JS</div>
+          <div class="tech-version">Jinja2 Templates</div>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-badge tb-lib">Biblioteca</span>
+        <div>
+          <div class="tech-name">Chart.js</div>
+          <div class="tech-version">v4 — Gráficos interativos</div>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-badge tb-lib">Ícones</span>
+        <div>
+          <div class="tech-name">Font Awesome 6</div>
+          <div class="tech-version">Free — CDN</div>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-badge tb-lib">Fontes</span>
+        <div>
+          <div class="tech-name">Plus Jakarta Sans + Space Mono</div>
+          <div class="tech-version">Google Fonts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Changelog -->
+  <div class="changelog-card">
+    <h2 class="section-title" style="margin-bottom:14px"><i class="fa-solid fa-code-commit"></i> Histórico de Versões</h2>
+    <div class="changelog-list">
+
+      <div class="changelog-item">
+        <div class="changelog-dot cl-major" style="position:relative"></div>
+        <div class="changelog-content">
+          <div class="changelog-ver">v1.0.0 — Atual</div>
+          <div class="changelog-desc">Redesign completo da interface</div>
+          <div class="changelog-date">Março 2026</div>
+          <div class="changelog-tags">
+            <span class="cl-tag">Design System</span>
+            <span class="cl-tag">Sidebar</span>
+            <span class="cl-tag">CSS Variables</span>
+            <span class="cl-tag">Responsivo</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="changelog-item">
+        <div class="changelog-dot cl-minor" style="position:relative"></div>
+        <div class="changelog-content">
+          <div class="changelog-ver">v0.9.0</div>
+          <div class="changelog-desc">Migração para novo banco de dados</div>
+          <div class="changelog-date">Março 2026</div>
+          <div class="changelog-tags">
+            <span class="cl-tag">EasyPanel</span>
+            <span class="cl-tag">MySQL</span>
+            <span class="cl-tag">PyMySQL</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="changelog-item">
+        <div class="changelog-dot cl-minor" style="position:relative"></div>
+        <div class="changelog-content">
+          <div class="changelog-ver">v0.8.0</div>
+          <div class="changelog-desc">Módulos de Reservas e Chat</div>
+          <div class="changelog-date">Agosto 2024</div>
+          <div class="changelog-tags">
+            <span class="cl-tag">Área Comum</span>
+            <span class="cl-tag">Mensagens</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="changelog-item">
+        <div class="changelog-dot cl-patch" style="position:relative"></div>
+        <div class="changelog-content">
+          <div class="changelog-ver">v0.5.0</div>
+          <div class="changelog-desc">Cobranças, Moradores e Funcionários</div>
+          <div class="changelog-date">Julho 2024</div>
+          <div class="changelog-tags">
+            <span class="cl-tag">Financeiro</span>
+            <span class="cl-tag">CRUD</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="changelog-item">
+        <div class="changelog-dot cl-patch" style="position:relative"></div>
+        <div class="changelog-content">
+          <div class="changelog-ver">v0.1.0</div>
+          <div class="changelog-desc">Versão inicial — estrutura base</div>
+          <div class="changelog-date">Julho 2024</div>
+          <div class="changelog-tags">
+            <span class="cl-tag">Flask</span>
+            <span class="cl-tag">SQLAlchemy</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /sobre-2col -->
+
+<!-- ══════════════════════════════════════════════════════════
+     CTA
+══════════════════════════════════════════════════════════ -->
+<div class="sobre-cta">
+  <div class="cta-text">
+    <h3>Pronto para começar?</h3>
+    <p>Acesse o painel de gerenciamento e explore todas as funcionalidades do Smart Condominium.</p>
+  </div>
+  <div class="cta-actions">
+    <a href="{{ url_for('index') }}" class="cta-btn cta-btn-primary">
+      <i class="fa-solid fa-gauge-high"></i> Ir para o Painel
+    </a>
+    <a href="{{ url_for('condominio') }}" class="cta-btn cta-btn-secondary">
+      <i class="fa-solid fa-city"></i> Ver Condomínios
+    </a>
+  </div>
+</div>
+
+{% endblock %}

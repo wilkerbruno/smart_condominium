@@ -1,0 +1,226 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/perfil.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<div class="perfil-header">
+  <div class="perfil-header-left">
+    <div class="perfil-avatar-xl">
+      {{ session.get('user_nome', '?')[:1].upper() }}{{ session.get('user_nome', '?').split(' ')[-1][:1].upper() if ' ' in session.get('user_nome', '') else '' }}
+    </div>
+    <div>
+      <h2 class="perfil-nome">{{ session.get('user_nome', '') }}</h2>
+      <div class="perfil-meta">
+        <span class="perfil-usuario">
+          <i class="fa-solid fa-at"></i>
+          {{ session.get('usuario', session.get('email', '—')) }}
+        </span>
+        {% if session.get('cargo') == 'sindico' %}
+        <span class="perfil-badge perfil-badge--sindico"><i class="fa-solid fa-crown"></i> Síndico</span>
+        {% elif session.get('cargo') == 'morador' %}
+        <span class="perfil-badge perfil-badge--morador"><i class="fa-solid fa-house-user"></i> Morador</span>
+        {% else %}
+        <span class="perfil-badge perfil-badge--funcionario"><i class="fa-solid fa-id-badge"></i> {{ session.get('cargo', 'Funcionário') | capitalize }}</span>
+        {% endif %}
+        {% if session.get('tambem_morador') %}
+        <span class="perfil-badge perfil-badge--morador"><i class="fa-solid fa-house-user"></i> Também Morador</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <a href="{{ url_for('index') }}" class="btn-back-perfil">
+    <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+  </a>
+</div>
+
+<!-- ── Grid de seções ───────────────────────────────────────── -->
+<div class="perfil-grid">
+
+  {# ── DADOS DO FUNCIONÁRIO ──────────────────────────────── #}
+  {% if dados_func %}
+  <div class="perfil-card">
+    <div class="perfil-card-header perfil-card-header--func">
+      <div class="perfil-card-icon"><i class="fa-solid fa-id-badge"></i></div>
+      <div>
+        <h3>Dados Profissionais</h3>
+        <p>Informações de funcionário no condomínio</p>
+      </div>
+    </div>
+    <div class="perfil-card-body">
+
+      <div class="perfil-fields">
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-user"></i> Nome Completo</span>
+          <span class="perfil-field-value">{{ dados_func.get('nome', '—') }}</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-briefcase"></i> Cargo</span>
+          <span class="perfil-field-value">
+            <span class="perfil-cargo-badge">{{ (dados_func.get('cargo') or '—') | capitalize }}</span>
+          </span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-envelope"></i> E-mail</span>
+          <span class="perfil-field-value">{{ dados_func.get('email') or '—' }}</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-phone"></i> Telefone</span>
+          <span class="perfil-field-value">{{ dados_func.get('telefone') or '—' }}</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-at"></i> Usuário</span>
+          <span class="perfil-field-value perfil-field-mono">{{ dados_func.get('usuario') or '—' }}</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-regular fa-clock"></i> Horário</span>
+          <span class="perfil-field-value">{{ dados_func.get('horario_trabalho') or '—' }}</span>
+        </div>
+      </div>
+
+      <div class="perfil-actions">
+        <a href="{{ url_for('escalas') }}" class="perfil-action-btn perfil-action-btn--brand">
+          <i class="fa-solid fa-calendar-week"></i> Ver Minha Escala
+        </a>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── DADOS DO MORADOR ──────────────────────────────────── #}
+  {% if dados_mora %}
+  <div class="perfil-card">
+    <div class="perfil-card-header perfil-card-header--mora">
+      <div class="perfil-card-icon"><i class="fa-solid fa-house-user"></i></div>
+      <div>
+        <h3>Dados de Morador</h3>
+        <p>Informações residenciais no condomínio</p>
+      </div>
+    </div>
+    <div class="perfil-card-body">
+
+      <div class="perfil-fields">
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-user"></i> Nome</span>
+          <span class="perfil-field-value">{{ dados_mora.get('nome', '—') }}</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-envelope"></i> E-mail</span>
+          <span class="perfil-field-value">{{ dados_mora.get('email') or '—' }}</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-phone"></i> Telefone</span>
+          <span class="perfil-field-value">{{ dados_mora.get('telefone') or '—' }}</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-door-open"></i> Unidade</span>
+          <span class="perfil-field-value">
+            {% if dados_mora.get('numero_unidade') %}
+            <span class="perfil-unidade-tag">{{ dados_mora.get('numero_unidade') }}</span>
+            {% else %}—{% endif %}
+          </span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-key"></i> Relação</span>
+          <span class="perfil-field-value">{{ dados_mora.get('relacao_unidade') or '—' }}</span>
+        </div>
+        {% if dados_mora.get('documento_identidade') %}
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-id-card"></i> Documento</span>
+          <span class="perfil-field-value perfil-field-mono">{{ dados_mora.get('documento_identidade') }}</span>
+        </div>
+        {% endif %}
+        {% if dados_mora.get('data_nascimento') %}
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-regular fa-calendar"></i> Nascimento</span>
+          <span class="perfil-field-value">
+            {{ dados_mora.get('data_nascimento').strftime('%d/%m/%Y') if dados_mora.get('data_nascimento') else '—' }}
+          </span>
+        </div>
+        {% endif %}
+      </div>
+
+      {# Veículo #}
+      {% if dados_mora.get('veiculo_modelo') %}
+      <div class="perfil-veiculo">
+        <div class="perfil-veiculo-header">
+          <i class="fa-solid fa-car"></i> Veículo Cadastrado
+        </div>
+        <div class="perfil-veiculo-body">
+          <span><strong>{{ dados_mora.get('veiculo_modelo', '—') }}</strong></span>
+          {% if dados_mora.get('veiculo_placa') %}
+          <span class="placa-tag">{{ dados_mora.get('veiculo_placa') }}</span>
+          {% endif %}
+          {% if dados_mora.get('veiculo_cor') %}
+          <span class="perfil-field-value">{{ dados_mora.get('veiculo_cor') }}</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="perfil-actions">
+        <a href="{{ url_for('fazer_reservas') }}" class="perfil-action-btn perfil-action-btn--green">
+          <i class="fa-solid fa-calendar-check"></i> Reservar Área Comum
+        </a>
+        <a href="{{ url_for('cobranca') }}" class="perfil-action-btn perfil-action-btn--outline">
+          <i class="fa-solid fa-file-invoice-dollar"></i> Ver Cobranças
+        </a>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── SEGURANÇA ─────────────────────────────────────────── #}
+  <div class="perfil-card">
+    <div class="perfil-card-header perfil-card-header--sec">
+      <div class="perfil-card-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div>
+        <h3>Segurança e Acesso</h3>
+        <p>Credenciais e opções de segurança</p>
+      </div>
+    </div>
+    <div class="perfil-card-body">
+
+      <div class="perfil-fields">
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-at"></i> Nome de usuário</span>
+          <span class="perfil-field-value perfil-field-mono">{{ session.get('usuario', '—') }}</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-envelope"></i> E-mail de acesso</span>
+          <span class="perfil-field-value">{{ session.get('email', '—') }}</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-lock"></i> Senha</span>
+          <span class="perfil-field-value">••••••••</span>
+        </div>
+        <div class="perfil-field">
+          <span class="perfil-field-label"><i class="fa-solid fa-circle-check"></i> Status da conta</span>
+          <span class="perfil-field-value">
+            <span class="perfil-status-ativo"><i class="fa-solid fa-circle-check"></i> Ativa</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="perfil-security-notice">
+        <i class="fa-solid fa-circle-info"></i>
+        Para alterar sua senha, solicite ao síndico um novo link de acesso.
+      </div>
+
+      <div class="perfil-actions">
+        <a href="{{ url_for('logout') }}" class="perfil-action-btn perfil-action-btn--danger">
+          <i class="fa-solid fa-right-from-bracket"></i> Sair da conta
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /perfil-grid -->
+
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends "template.html" %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/form.css') }}">
+{% endblock %}
+
+{% block conteudo_body %}
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="form-page-header">
+  <div>
+    <h2>Cadastrar Condomínio</h2>
+    <p>Preencha os dados para registrar um novo condomínio no sistema</p>
+  </div>
+  <a href="{{ url_for('condominio') }}" class="btn-back">
+    <i class="fa-solid fa-arrow-left"></i> Voltar
+  </a>
+</div>
+
+<!-- ── Layout: steps + form ────────────────────────────────── -->
+<form id="cadastro-condominio-form" action="{{ url_for('cadastrar') }}" method="post">
+<div class="form-wrapper">
+
+  <!-- Sidebar de steps -->
+  <div class="form-steps">
+    <p class="form-steps-title">Etapas</p>
+
+    <div class="step-item active" id="step-nav-1" onclick="goStep(1)">
+      <div class="step-dot">1</div>
+      <div class="step-info">
+        <span class="step-label">Identificação</span>
+        <span class="step-sub">Nome e localização</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-2" onclick="goStep(2)">
+      <div class="step-dot">2</div>
+      <div class="step-info">
+        <span class="step-label">Contato</span>
+        <span class="step-sub">Telefone e e-mail</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-3" onclick="goStep(3)">
+      <div class="step-dot">3</div>
+      <div class="step-info">
+        <span class="step-label">Síndico</span>
+        <span class="step-sub">Dados do responsável</span>
+      </div>
+    </div>
+
+    <div class="step-item" id="step-nav-4" onclick="goStep(4)">
+      <div class="step-dot">4</div>
+      <div class="step-info">
+        <span class="step-label">Regulamento</span>
+        <span class="step-sub">Regras e observações</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card do formulário -->
+  <div class="form-card">
+
+    <!-- ── STEP 1: Identificação ──────────────────────────── -->
+    <div class="form-section active" id="step-1">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-building"></i></div>
+        <div>
+          <h3>Identificação do Condomínio</h3>
+          <p>Dados de nome e endereço completo</p>
+        </div>
+      </div>
+
+      <div class="fields-grid">
+        <div class="field col-span-3">
+          <label for="nome-condominio">Nome do Condomínio <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-building"></i>
+            <input type="text" id="nome-condominio" name="nome-condominio"
+                   placeholder="Ex: Residencial Primavera" required>
+          </div>
+        </div>
+
+        <div class="field col-span-2">
+          <label for="endereco-condominio">Endereço <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-road"></i>
+            <input type="text" id="endereco-condominio" name="endereco-condominio"
+                   placeholder="Rua, Avenida, Travessa…" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="numero-condominio">Número <span class="required">*</span></label>
+          <input type="text" id="numero-condominio" name="numero-condominio"
+                 placeholder="Ex: 100" required>
+        </div>
+
+        <div class="field">
+          <label for="cep-condominio">CEP <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-location-crosshairs"></i>
+            <input type="text" id="cep-condominio" name="cep-condominio"
+                   placeholder="00000-000" maxlength="9" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="cidade-condominio">Cidade <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-city"></i>
+            <input type="text" id="cidade-condominio" name="cidade-condominio"
+                   placeholder="Ex: São Paulo" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="estado-condominio">Estado <span class="required">*</span></label>
+          <select id="estado-condominio" name="estado-condominio" required>
+            <option value="">Selecione…</option>
+            <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+            <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+            <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+            <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+            <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+            <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+            <option selected>SP</option><option>SE</option><option>TO</option>
+          </select>
+        </div>
+      </div>
+    </div><!-- /step-1 -->
+
+    <!-- ── STEP 2: Contato ───────────────────────────────── -->
+    <div class="form-section" id="step-2">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-phone"></i></div>
+        <div>
+          <h3>Dados de Contato</h3>
+          <p>Telefone, celular e e-mail do condomínio</p>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-2">
+        <div class="field">
+          <label for="telefone-condominio">Telefone</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-phone"></i>
+            <input type="tel" id="telefone-condominio" name="telefone-condominio"
+                   placeholder="(00) 0000-0000">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="celular-condominio">Celular <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <input type="tel" id="celular-condominio" name="celular-condominio"
+                   placeholder="(00) 00000-0000" required>
+          </div>
+        </div>
+
+        <div class="field col-span-2">
+          <label for="email-condominio">E-mail</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="email-condominio" name="email-condominio"
+                   placeholder="contato@condominio.com">
+          </div>
+        </div>
+      </div>
+    </div><!-- /step-2 -->
+
+    <!-- ── STEP 3: Síndico ──────────────────────────────── -->
+    <div class="form-section" id="step-3">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-user-tie"></i></div>
+        <div>
+          <h3>Dados do Síndico</h3>
+          <p>Responsável pela administração do condomínio</p>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-2">
+        <div class="field col-span-2">
+          <label for="nome-sindico">Nome do Síndico <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="nome-sindico" name="nome-sindico"
+                   placeholder="Nome completo" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="telefone-sindico">Telefone do Síndico <span class="required">*</span></label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-phone"></i>
+            <input type="tel" id="telefone-sindico" name="telefone-sindico"
+                   placeholder="(00) 00000-0000" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email-sindico">E-mail do Síndico</label>
+          <div class="field-icon-wrap">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="email-sindico" name="email-sindico"
+                   placeholder="sindico@email.com">
+          </div>
+        </div>
+      </div>
+    </div><!-- /step-3 -->
+
+    <!-- ── STEP 4: Regulamento ──────────────────────────── -->
+    <div class="form-section" id="step-4">
+      <div class="form-section-header">
+        <div class="section-icon"><i class="fa-solid fa-file-lines"></i></div>
+        <div>
+          <h3>Regulamento Interno</h3>
+          <p>Regras, normas e observações gerais</p>
+        </div>
+      </div>
+
+      <div class="fields-grid cols-1">
+        <div class="field">
+          <label for="observacoes">Regras e Regulamentos</label>
+          <textarea id="observacoes" name="observacoes" rows="8"
+                    placeholder="Descreva as regras internas, regulamentos, normas de convivência…"></textarea>
+          <span class="field-hint">Opcional — pode ser preenchido ou editado posteriormente.</span>
+        </div>
+      </div>
+    </div><!-- /step-4 -->
+
+    <!-- Footer de navegação -->
+    <div class="form-footer">
+      <span class="form-footer-info" id="stepInfo">Etapa 1 de 4</span>
+      <div class="form-footer-actions">
+        <button type="button" class="btn-step btn-prev" id="btnPrev"
+                onclick="prevStep()" style="display:none">
+          <i class="fa-solid fa-arrow-left"></i> Anterior
+        </button>
+        <button type="button" class="btn-step btn-next" id="btnNext"
+                onclick="nextStep()">
+          Próximo <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <button type="submit" class="btn-step btn-submit" id="btnSubmit"
+                style="display:none">
+          <i class="fa-solid fa-floppy-disk"></i> Salvar Condomínio
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /form-card -->
+</div><!-- /form-wrapper -->
+</form>
+
+<script>
+(function () {
+  var TOTAL   = 4;
+  var current = 1;
+
+  function update() {
+    /* seções */
+    for (var i = 1; i <= TOTAL; i++) {
+      var sec = document.getElementById('step-' + i);
+      var nav = document.getElementById('step-nav-' + i);
+      if (sec) sec.classList.toggle('active', i === current);
+      if (nav) {
+        nav.classList.remove('active', 'done');
+        if (i === current) nav.classList.add('active');
+        else if (i < current) nav.classList.add('done');
+      }
+    }
+    /* botões */
+    document.getElementById('btnPrev').style.display   = current > 1      ? '' : 'none';
+    document.getElementById('btnNext').style.display   = current < TOTAL  ? '' : 'none';
+    document.getElementById('btnSubmit').style.display = current === TOTAL ? '' : 'none';
+    document.getElementById('stepInfo').textContent    = 'Etapa ' + current + ' de ' + TOTAL;
+  }
+
+  window.goStep = function (n) {
+    if (n >= 1 && n <= TOTAL) { current = n; update(); }
+  };
+  window.nextStep = function () { if (current < TOTAL) { current++; update(); } };
+  window.prevStep = function () { if (current > 1)     { current--; update(); } };
+
+  /* Máscara CEP */
+  var cepInput = document.getElementById('cep-condominio');
+  if (cepInput) {
+    cepInput.addEventListener('input', function () {
+      var v = this.value.replace(/\D/g, '').slice(0, 8);
+      this.value = v.length > 5 ? v.slice(0, 5) + '-' + v.slice(5) : v;
+    });
+  }
+
+  update();
+})();
+</script>
+
+{% endblock %}
