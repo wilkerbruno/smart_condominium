@@ -1,0 +1,50 @@
+# Segredos — NUNCA vão pra imagem Docker
+.env
+.env.*
+!.env.example
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Git
+.git/
+.gitignore
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Backups gerados pelos scripts de patch
+condominio/templates/*.bak_*
+
+# Scripts de migration/patch (não precisam estar no container)
+migrate_usuario.py
+migrate_convite_escala.py
+migrate_pessoa_condominio.py
+setup_database.py
+criar_admin.py
+patch_template_dropdown.py
+fix_dropdown_config.py
+fix_add_perfil.py
+
+# Logs e banco local
+*.log
+*.db
+*.sqlite3
+
+# Nixpacks (não usamos mais — o EasyPanel usa o Dockerfile)
+nixpacks.toml
+.nixpacks/
+
+# Documentação de dev
+API_README.md
