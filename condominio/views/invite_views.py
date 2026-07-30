@@ -5,15 +5,30 @@ Compatível com SQLAlchemy 1.x (estilo ORM .query usado no projeto).
 Usa pymysql direto para os INSERTs/SELECTs, evitando problemas de versão.
 """
 
+import re
 import secrets
 from datetime import datetime, timedelta
 
 from flask import redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from condominio import app
+from condominio import app, db
 from condominio.auth_web import role_required_web
 from condominio.db_raw import get_conn as _get_conn
+
+
+def _condominio_atuando():
+    """Primeiro condomínio onde o síndico/administrador logado tem vínculo
+    ativo — usado para vincular novos cadastros feitos pelo site."""
+    contexto = session.get("contexto", {})
+    vinculos = contexto.get("condominios_funcionario", [])
+    if not vinculos:
+        return None
+    return vinculos[0]["condominio"]["id"]
+
+
+def _normalizar_documento(doc):
+    return re.sub(r"\D", "", doc or "") or None
 
 
 # ── Helper: gera token e salva convite ─────────────────────────
@@ -61,14 +76,17 @@ def _log_email(nome, email, link, tipo):
 @app.route("/salvar_funcionario", methods=["POST"])
 @role_required_web("sindico", "administrador")
 def salvar_funcionario():
+    from condominio.models.funcionario_model import Funcionario
+    from condominio.models.funcionario_condominio_model import FuncionarioCondominio
+
     nome     = request.form.get("nome_funcionario",   "").strip()
     cargo    = request.form.get("Cargo_funcionario",  "").strip()
     horario  = request.form.get("horario_trabalho",   "").strip()
     telefone = request.form.get("telefone_morador",   "").strip()
     email    = request.form.get("email_funcionario",  "").strip().lower()
     salario  = request.form.get("salario_funcionario","0").strip()
+    cpf      = request.form.get("cpf_funcionario",     "").strip()
 
-    # Validação básica
     if not nome or not cargo or not email:
         return render_template(
             "cadastro_funcionario.html",
@@ -81,50 +99,52 @@ def salvar_funcionario():
     except ValueError:
         sal_float = 0.0
 
-    conn = _get_conn()
+    condominio_id = _condominio_atuando()
+    if not condominio_id:
+        return render_template(
+            "cadastro_funcionario.html",
+            titulo="Cadastro de Funcionário",
+            erro="Sua conta não está vinculada a nenhum condomínio — não é possível cadastrar."
+        )
+
+    if Funcionario.query.filter_by(email=email).first():
+        return render_template(
+            "cadastro_funcionario.html",
+            titulo="Cadastro de Funcionário",
+            erro=f"Já existe um funcionário cadastrado com o e-mail '{email}'."
+        )
+
+    doc = _normalizar_documento(cpf)
+    if doc and Funcionario.query.filter_by(documento_identidade=doc).first():
+        return render_template(
+            "cadastro_funcionario.html",
+            titulo="Cadastro de Funcionário",
+            erro="Já existe uma pessoa cadastrada com este CPF em outro condomínio. "
+                 "Use a API (/api/v1/funcionarios/vincular) para vinculá-la aqui sem duplicar o cadastro."
+        )
+
+    usuario = request.form.get("usuario_gerado", "").strip().lower() or None
+
     try:
-        with conn.cursor() as cur:
-            # Verifica se e-mail já existe
-            cur.execute("SELECT id FROM funcionario WHERE email = %s", (email,))
-            if cur.fetchone():
-                return render_template(
-                    "cadastro_funcionario.html",
-                    titulo="Cadastro de Funcionário",
-                    erro=f"Já existe um funcionário cadastrado com o e-mail '{email}'."
-                )
+        func = Funcionario(nome=nome, usuario=usuario, documento_identidade=doc,
+                            telefone=telefone, email=email)
+        func.ativo = False
+        db.session.add(func)
+        db.session.flush()  # gera func.id sem commitar ainda
 
-            # Insere o funcionário
-            usuario = request.form.get("usuario_gerado", "").strip().lower()
-
-            # Garante unicidade do usuario
-            if usuario:
-                cur.execute(
-                    "SELECT COUNT(*) AS n FROM funcionario WHERE usuario = %s "
-                    "UNION ALL SELECT COUNT(*) AS n FROM morador WHERE usuario = %s",
-                    (usuario, usuario)
-                )
-                conflito = sum(r["n"] for r in cur.fetchall())
-                if conflito > 0:
-                    usuario = usuario  # mantém; o backend do invite não bloqueia
-
-            cur.execute(
-                "INSERT INTO funcionario "
-                "(nome, usuario, cargo, telefone, email, horario_trabalho, salario_funcionario, ativo) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, 0)",
-                (nome, usuario or None, cargo, telefone, email, horario, sal_float)
-            )
-            func_id = cur.lastrowid
-        conn.commit()
-
+        db.session.add(FuncionarioCondominio(
+            funcionario_id=func.id, condominio_id=condominio_id,
+            cargo=cargo, horario_trabalho=horario, salario_funcionario=sal_float,
+        ))
+        db.session.commit()
+        func_id = func.id
     except Exception as e:
-        conn.rollback()
+        db.session.rollback()
         return render_template(
             "cadastro_funcionario.html",
             titulo="Cadastro de Funcionário",
             erro=f"Erro ao salvar funcionário: {str(e)}"
         )
-    finally:
-        conn.close()
 
     # Gera convite
     try:
@@ -156,15 +176,22 @@ def salvar_funcionario():
 @app.route("/salvar_morador", methods=["POST"])
 @role_required_web("sindico", "administrador")
 def salvar_morador():
+    from condominio.models.morador_model import Morador
+    from condominio.models.morador_unidade_model import MoradorUnidade
+    from condominio.models.unidade_model import Unidade
+
     nome      = request.form.get("nome_morador",        "").strip()
     email     = request.form.get("email_morador",       "").strip().lower()
     telefone  = request.form.get("telefone_morador",    "").strip()
     celular   = request.form.get("celular_morador",     "").strip()
-    unidade   = request.form.get("unit-number",         "").strip()
+    numero_unidade = request.form.get("unit-number",    "").strip()
     relacao   = request.form.get("status_morador",      "Proprietário").strip()
     documento = request.form.get("documento_identidade","").strip()
     cpf       = request.form.get("cpf_morador",         "").strip()
-    nasc      = request.form.get("data_nascimento",     None)
+    nasc      = request.form.get("data_nascimento",     None) or None
+    veic_modelo = request.form.get("veiculo_modelo", "").strip()
+    veic_placa  = request.form.get("veiculo_placa", "").strip()
+    veic_cor    = request.form.get("veiculo_cor", "").strip()
 
     if not nome or not email:
         return render_template(
@@ -173,41 +200,68 @@ def salvar_morador():
             erro="Preencha nome e e-mail para continuar."
         )
 
-    conn = _get_conn()
-    try:
-        with conn.cursor() as cur:
-            # Verifica duplicata de e-mail
-            cur.execute("SELECT id FROM morador WHERE email = %s", (email,))
-            if cur.fetchone():
-                return render_template(
-                    "cadastro_morador.html",
-                    titulo="Cadastro de Morador",
-                    erro=f"Já existe um morador cadastrado com o e-mail '{email}'."
-                )
+    condominio_id = _condominio_atuando()
+    if not condominio_id:
+        return render_template(
+            "cadastro_morador.html",
+            titulo="Cadastro de Morador",
+            erro="Sua conta não está vinculada a nenhum condomínio — não é possível cadastrar."
+        )
 
-            nasc_val = nasc if nasc else None
-            usuario_m = request.form.get("usuario_gerado", "").strip().lower()
-
-            cur.execute(
-                "INSERT INTO morador "
-                "(nome, usuario, email, telefone, relacao_unidade, "
-                " documento_identidade, data_nascimento, ativo) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, 0)",
-                (nome, usuario_m or None, email, telefone or celular, relacao,
-                 documento or cpf, nasc_val)
+    unidade = None
+    if numero_unidade:
+        unidade = Unidade.query.filter_by(
+            condominio_id=condominio_id, numero_unidade=numero_unidade
+        ).first()
+        if not unidade:
+            return render_template(
+                "cadastro_morador.html",
+                titulo="Cadastro de Morador",
+                erro=f"Não existe a unidade '{numero_unidade}' cadastrada no seu condomínio. "
+                     f"Cadastre a unidade primeiro em Unidades."
             )
-            mor_id = cur.lastrowid
-        conn.commit()
 
+    if Morador.query.filter_by(email=email).first():
+        return render_template(
+            "cadastro_morador.html",
+            titulo="Cadastro de Morador",
+            erro=f"Já existe um morador cadastrado com o e-mail '{email}'."
+        )
+
+    doc = _normalizar_documento(documento or cpf)
+    if doc and Morador.query.filter_by(documento_identidade=doc).first():
+        return render_template(
+            "cadastro_morador.html",
+            titulo="Cadastro de Morador",
+            erro="Já existe uma pessoa cadastrada com este CPF em outro condomínio/unidade. "
+                 "Use a API (/api/v1/moradores/vincular) para vinculá-la aqui sem duplicar o cadastro."
+        )
+
+    usuario_m = request.form.get("usuario_gerado", "").strip().lower() or None
+
+    try:
+        mor = Morador(nome=nome, usuario=usuario_m, documento_identidade=doc,
+                       email=email, telefone=telefone or celular,
+                       data_nascimento=nasc)
+        mor.ativo = False
+        db.session.add(mor)
+        db.session.flush()
+
+        if unidade:
+            db.session.add(MoradorUnidade(
+                morador_id=mor.id, unidade_id=unidade.id, relacao_unidade=relacao,
+                veiculo_modelo=veic_modelo or None, veiculo_placa=veic_placa or None,
+                veiculo_cor=veic_cor or None,
+            ))
+        db.session.commit()
+        mor_id = mor.id
     except Exception as e:
-        conn.rollback()
+        db.session.rollback()
         return render_template(
             "cadastro_morador.html",
             titulo="Cadastro de Morador",
             erro=f"Erro ao salvar morador: {str(e)}"
         )
-    finally:
-        conn.close()
 
     # Gera convite
     try:
